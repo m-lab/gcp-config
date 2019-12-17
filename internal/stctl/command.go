@@ -199,7 +199,7 @@ func datesEqual(start *storagetransfer.Date, end *storagetransfer.Date) bool {
 	return (start != nil && end != nil && start.Day == end.Day && start.Month == end.Month && start.Year == end.Year)
 }
 
-// Sync guarantees that a job exists matching the current parameters for Create.
+// Sync guarantees that a job exists matching the current command parameters.
 // However, unlike Create, if a similar job already exists, no action is taken.
 // If a matching description is found with different values for IncludePrefixes
 // or StartTimeOfDay, then the original job is disabled and a new job created.
