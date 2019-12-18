@@ -124,7 +124,6 @@ func md2JSON(m jobMetadata) []byte {
 	b, err := json.Marshal(m)
 	rtx.Must(err, "Failed to marshal jobMetadata")
 	return b
-
 }
 
 func TestCommand_ListOperations(t *testing.T) {
