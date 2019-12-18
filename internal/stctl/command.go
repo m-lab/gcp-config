@@ -12,15 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package stctl implements command actions.
+// Package stctl implements storage tranfer actions used by the stctl CLI tool.
 package stctl
 
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"time"
 
 	"github.com/m-lab/go/flagx"
+	"github.com/m-lab/go/logx"
+	"github.com/m-lab/go/pretty"
 	"github.com/m-lab/go/rtx"
 
 	"google.golang.org/api/googleapi"
@@ -29,7 +33,7 @@ import (
 
 // TransferJob captures the interface required by Command implementations.
 type TransferJob interface {
-	List(ctx context.Context, visit func(resp *storagetransfer.ListTransferJobsResponse) error) error
+	Jobs(ctx context.Context, visit func(resp *storagetransfer.ListTransferJobsResponse) error) error
 	Create(ctx context.Context, create *storagetransfer.TransferJob) (*storagetransfer.TransferJob, error)
 	Get(ctx context.Context, name string) (*storagetransfer.TransferJob, error)
 	Update(ctx context.Context, name string, update *storagetransfer.UpdateTransferJobRequest) (*storagetransfer.TransferJob, error)
@@ -38,23 +42,72 @@ type TransferJob interface {
 
 // Command executes stctl actions.
 type Command struct {
-	Job          TransferJob
+	Client       TransferJob
 	Project      string
 	SourceBucket string
 	TargetBucket string
 	Prefixes     []string
 	StartTime    flagx.Time
 	AfterDate    time.Time
+	Output       io.Writer
 }
 
 // ListJobs lists enabled transfer jobs.
 func (c *Command) ListJobs(ctx context.Context) error {
-	return nil
+	visit := func(resp *storagetransfer.ListTransferJobsResponse) error {
+		for _, job := range resp.TransferJobs {
+			// NB: One-time jobs have equal ScheduleStartDate and ScheduleEndDate.
+			// We only manage daily jobs that never terminate, which have no ScheduleEndDate.
+			if job.Schedule.ScheduleEndDate == nil {
+				logx.Debug.Print(pretty.Sprint(job))
+				including := "AllPrefixes"
+				if job.TransferSpec.ObjectConditions != nil {
+					including = fmt.Sprintf("%v", job.TransferSpec.ObjectConditions.IncludePrefixes)
+				}
+				fmt.Fprintf(c.Output, "%-25s starting:%s desc:%q including:%v\n",
+					job.Name, fmtTime(job.Schedule.StartTimeOfDay), job.Description, including)
+			}
+		}
+		return nil
+	}
+	return c.Client.Jobs(ctx, visit)
 }
 
 // ListOperations lists past operations for the named job that started after c.AfterDate.
 func (c *Command) ListOperations(ctx context.Context, name string) error {
-	return nil
+	visit := func(r *storagetransfer.ListOperationsResponse) error {
+		for _, op := range r.Operations {
+			m := parseJobMetadata(op.Metadata)
+			if m.Start.Before(c.AfterDate) {
+				// Ignore operations before AfterDate.
+				continue
+			}
+			logx.Debug.Print(pretty.Sprint(op))
+			if m.TransferSpec == nil || m.TransferSpec.ObjectConditions == nil {
+				continue
+			}
+			fmt.Fprintf(c.Output,
+				("Copy %s to %s including:%v :: " +
+					"Found %-7s Copied %-7s Skipped %-8s Failed %2q :: " +
+					"Lasted %f minutes with Status %s Started %s\n"),
+				m.TransferSpec.GcsDataSource.BucketName, m.TransferSpec.GcsDataSink.BucketName,
+				m.TransferSpec.ObjectConditions.IncludePrefixes,
+				m.Counters.ObjectsFound,
+				m.Counters.ObjectsCopied,
+				m.Counters.ObjectsFromSourceSkippedBySync,
+				m.Counters.ObjectsFromSourceFailed,
+				m.End.Sub(m.Start).Minutes(),
+				m.Status,
+				m.Start,
+			)
+		}
+		return nil
+	}
+	return c.Client.Operations(ctx, name, visit)
+}
+
+func fmtTime(t *storagetransfer.TimeOfDay) string {
+	return fmt.Sprintf("%02d:%02d:%02d", t.Hours, t.Minutes, t.Seconds)
 }
 
 // Create creates a new storage transfer job.
