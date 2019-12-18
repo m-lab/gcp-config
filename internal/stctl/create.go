@@ -24,9 +24,9 @@ func (c *Command) Create(ctx context.Context) (*storagetransfer.TransferJob, err
 			// Date to start transfers. May start today if StartTimeOfDay is in the future.
 			// If StartTimeOfDay is in the past, then the first transfer will be scheduled tomorrow.
 			ScheduleStartDate: &storagetransfer.Date{
-				Day:   int64(time.Now().Day()),
-				Month: int64(time.Now().Month()),
-				Year:  int64(time.Now().Year()),
+				Day:   int64(time.Now().UTC().Day()),
+				Month: int64(time.Now().UTC().Month()),
+				Year:  int64(time.Now().UTC().Year()),
 			},
 			StartTimeOfDay: &storagetransfer.TimeOfDay{
 				Hours:   int64(c.StartTime.Hour),
