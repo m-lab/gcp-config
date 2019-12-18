@@ -36,7 +36,7 @@ type fakeTJ struct {
 	createErr   error
 }
 
-func (f *fakeTJ) List(ctx context.Context, visit func(resp *storagetransfer.ListTransferJobsResponse) error) error {
+func (f *fakeTJ) Jobs(ctx context.Context, visit func(resp *storagetransfer.ListTransferJobsResponse) error) error {
 	return visit(f.listJobResp)
 }
 
@@ -80,7 +80,7 @@ func TestCommand_ListJobs(t *testing.T) {
 			name: "success",
 			c: &Command{
 				Output: output,
-				Job: &fakeTJ{
+				Client: &fakeTJ{
 					listJobResp: &storagetransfer.ListTransferJobsResponse{
 						TransferJobs: []*storagetransfer.TransferJob{
 							{
@@ -139,7 +139,7 @@ func TestCommand_ListOperations(t *testing.T) {
 			c: &Command{
 				Output:  output,
 				Project: "fake-mlab-testing",
-				Job: &fakeTJ{
+				Client: &fakeTJ{
 					listOpsResp: &storagetransfer.ListOperationsResponse{
 						Operations: []*storagetransfer.Operation{
 							{
@@ -171,7 +171,7 @@ func TestCommand_ListOperations(t *testing.T) {
 				Output:    output,
 				Project:   "fake-mlab-testing",
 				AfterDate: time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC),
-				Job: &fakeTJ{
+				Client: &fakeTJ{
 					listOpsResp: &storagetransfer.ListOperationsResponse{
 						Operations: []*storagetransfer.Operation{
 							{
@@ -190,7 +190,7 @@ func TestCommand_ListOperations(t *testing.T) {
 			name: "skip-missing-transferspec",
 			c: &Command{
 				Output: output,
-				Job: &fakeTJ{
+				Client: &fakeTJ{
 					listOpsResp: &storagetransfer.ListOperationsResponse{
 						Operations: []*storagetransfer.Operation{
 							{

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package stctl implements command actions.
+// Package stctl implements storage tranfer actions used by the stctl CLI tool.
 package stctl
 
 import (
@@ -24,8 +24,8 @@ import (
 
 	"github.com/m-lab/go/flagx"
 	"github.com/m-lab/go/logx"
+	"github.com/m-lab/go/pretty"
 	"github.com/m-lab/go/rtx"
-	"github.com/stephen-soltesz/pretty"
 
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/storagetransfer/v1"
@@ -33,7 +33,7 @@ import (
 
 // TransferJob captures the interface required by Command implementations.
 type TransferJob interface {
-	List(ctx context.Context, visit func(resp *storagetransfer.ListTransferJobsResponse) error) error
+	Jobs(ctx context.Context, visit func(resp *storagetransfer.ListTransferJobsResponse) error) error
 	Create(ctx context.Context, create *storagetransfer.TransferJob) (*storagetransfer.TransferJob, error)
 	Get(ctx context.Context, name string) (*storagetransfer.TransferJob, error)
 	Update(ctx context.Context, name string, update *storagetransfer.UpdateTransferJobRequest) (*storagetransfer.TransferJob, error)
@@ -42,7 +42,7 @@ type TransferJob interface {
 
 // Command executes stctl actions.
 type Command struct {
-	Job          TransferJob
+	Client       TransferJob
 	Project      string
 	SourceBucket string
 	TargetBucket string
@@ -70,7 +70,7 @@ func (c *Command) ListJobs(ctx context.Context) error {
 		}
 		return nil
 	}
-	return c.Job.List(ctx, visit)
+	return c.Client.Jobs(ctx, visit)
 }
 
 // ListOperations lists past operations for the named job that started after c.AfterDate.
@@ -103,7 +103,7 @@ func (c *Command) ListOperations(ctx context.Context, name string) error {
 		}
 		return nil
 	}
-	return c.Job.Operations(ctx, name, visit)
+	return c.Client.Operations(ctx, name, visit)
 }
 
 func fmtTime(t *storagetransfer.TimeOfDay) string {

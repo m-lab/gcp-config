@@ -45,8 +45,8 @@ type filter struct {
 	Names    []string `json:"job_names,omitempty"`
 }
 
-// List calls `visit` on all ENABLED transfer jobs in the current project.
-func (j *Job) List(ctx context.Context, visit func(resp *storagetransfer.ListTransferJobsResponse) error) error {
+// Jobs calls `visit` on all ENABLED transfer jobs in the current project.
+func (j *Job) Jobs(ctx context.Context, visit func(resp *storagetransfer.ListTransferJobsResponse) error) error {
 	f := filter{
 		Project:  j.project,
 		Statuses: []string{"ENABLED"},

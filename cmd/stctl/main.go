@@ -91,7 +91,7 @@ func main() {
 	rtx.Must(err, "Failed to create new storage transfer service")
 
 	cmd := &stctl.Command{
-		Job:          transfer.NewJob(project, service),
+		Client:       transfer.NewJob(project, service),
 		Project:      project,
 		SourceBucket: sourceBucket,
 		TargetBucket: destBucket,
