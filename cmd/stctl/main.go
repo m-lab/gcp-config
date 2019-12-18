@@ -98,6 +98,7 @@ func main() {
 		Prefixes:     prefixes,
 		StartTime:    startTime,
 		AfterDate:    afterDate.Time,
+		Output:       os.Stdout,
 	}
 
 	op := mustArg(0)

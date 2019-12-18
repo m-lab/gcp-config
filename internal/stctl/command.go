@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/m-lab/go/flagx"
@@ -48,6 +49,7 @@ type Command struct {
 	Prefixes     []string
 	StartTime    flagx.Time
 	AfterDate    time.Time
+	Output       io.Writer
 }
 
 // ListJobs lists enabled transfer jobs.
@@ -62,7 +64,7 @@ func (c *Command) ListJobs(ctx context.Context) error {
 				if job.TransferSpec.ObjectConditions != nil {
 					including = fmt.Sprintf("%v", job.TransferSpec.ObjectConditions.IncludePrefixes)
 				}
-				fmt.Printf("%-25s starting:%s desc:%q including:%v\n",
+				fmt.Fprintf(c.Output, "%-25s starting:%s desc:%q including:%v\n",
 					job.Name, fmtTime(job.Schedule.StartTimeOfDay), job.Description, including)
 			}
 		}
@@ -81,10 +83,10 @@ func (c *Command) ListOperations(ctx context.Context, name string) error {
 				continue
 			}
 			logx.Debug.Print(pretty.Sprint(op))
-			if m.TransferSpec == nil {
+			if m.TransferSpec == nil || m.TransferSpec.ObjectConditions == nil {
 				continue
 			}
-			fmt.Printf(
+			fmt.Fprintf(c.Output,
 				("Copy %s to %s including:%v :: " +
 					"Found %-7s Copied %-7s Skipped %-8s Failed %2q :: " +
 					"Lasted %f minutes with Status %s Started %s\n"),

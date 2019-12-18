@@ -16,8 +16,10 @@
 package stctl
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -68,6 +70,7 @@ func (f *fakeTJ) Operations(ctx context.Context, name string, visit func(r *stor
 }
 
 func TestCommand_ListJobs(t *testing.T) {
+	output := &bytes.Buffer{}
 	tests := []struct {
 		name    string
 		c       *Command
@@ -76,6 +79,7 @@ func TestCommand_ListJobs(t *testing.T) {
 		{
 			name: "success",
 			c: &Command{
+				Output: output,
 				Job: &fakeTJ{
 					listJobResp: &storagetransfer.ListTransferJobsResponse{
 						TransferJobs: []*storagetransfer.TransferJob{
@@ -110,6 +114,10 @@ func TestCommand_ListJobs(t *testing.T) {
 			}
 		})
 	}
+	c := strings.Count(output.String(), "\n")
+	if c != 1 {
+		t.Errorf("Command.ListJobs() wrote wrong number of lines; got %d, want 1", c)
+	}
 }
 
 func md2JSON(m jobMetadata) []byte {
@@ -120,6 +128,7 @@ func md2JSON(m jobMetadata) []byte {
 }
 
 func TestCommand_ListOperations(t *testing.T) {
+	output := &bytes.Buffer{}
 	tests := []struct {
 		name    string
 		c       *Command
@@ -129,6 +138,7 @@ func TestCommand_ListOperations(t *testing.T) {
 		{
 			name: "success",
 			c: &Command{
+				Output:  output,
 				Project: "fake-mlab-testing",
 				Job: &fakeTJ{
 					listOpsResp: &storagetransfer.ListOperationsResponse{
@@ -159,25 +169,15 @@ func TestCommand_ListOperations(t *testing.T) {
 		{
 			name: "skip-after-date",
 			c: &Command{
+				Output:    output,
 				Project:   "fake-mlab-testing",
 				AfterDate: time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC),
 				Job: &fakeTJ{
 					listOpsResp: &storagetransfer.ListOperationsResponse{
 						Operations: []*storagetransfer.Operation{
 							{
-								Name: "transferOperations/9876543210",
+								Name: "transferOperations/afterdate-excludes-operation-dates",
 								Metadata: md2JSON(jobMetadata{
-									TransferSpec: &storagetransfer.TransferSpec{
-										GcsDataSource: &storagetransfer.GcsData{
-											BucketName: "mlab-fake-source",
-										},
-										GcsDataSink: &storagetransfer.GcsData{
-											BucketName: "mlab-fake-target",
-										},
-										ObjectConditions: &storagetransfer.ObjectConditions{
-											IncludePrefixes: []string{"ndt"},
-										},
-									},
 									Start: time.Date(2018, time.January, 1, 0, 0, 0, 0, time.UTC),
 									End:   time.Date(2018, time.January, 1, 1, 0, 0, 0, time.UTC),
 								}),
@@ -190,12 +190,12 @@ func TestCommand_ListOperations(t *testing.T) {
 		{
 			name: "skip-missing-transferspec",
 			c: &Command{
-				Project: "fake-mlab-testing",
+				Output: output,
 				Job: &fakeTJ{
 					listOpsResp: &storagetransfer.ListOperationsResponse{
 						Operations: []*storagetransfer.Operation{
 							{
-								Name: "transferOperations/9876543210",
+								Name: "transferOperations/missing-transferspec",
 								Metadata: md2JSON(jobMetadata{
 									Start: time.Date(2018, time.January, 1, 0, 0, 0, 0, time.UTC),
 									End:   time.Date(2018, time.January, 1, 1, 0, 0, 0, time.UTC),
@@ -214,5 +214,9 @@ func TestCommand_ListOperations(t *testing.T) {
 				t.Errorf("Command.ListOperations() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
+	}
+	c := strings.Count(output.String(), "\n")
+	if c != 1 {
+		t.Errorf("Command.ListOperations() wrote wrong number of lines; got %d, want 1", c)
 	}
 }
