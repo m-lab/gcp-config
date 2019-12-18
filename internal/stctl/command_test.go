@@ -21,7 +21,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/m-lab/go/flagx"
 	"github.com/m-lab/go/rtx"
 	"google.golang.org/api/storagetransfer/v1"
 )
@@ -69,23 +68,14 @@ func (f *fakeTJ) Operations(ctx context.Context, name string, visit func(r *stor
 }
 
 func TestCommand_ListJobs(t *testing.T) {
-	type fields struct {
-		Job          TransferJob
-		Project      string
-		SourceBucket string
-		TargetBucket string
-		Prefixes     []string
-		StartTime    flagx.Time
-		AfterDate    time.Time
-	}
 	tests := []struct {
 		name    string
-		fields  fields
+		c       *Command
 		wantErr bool
 	}{
 		{
 			name: "success",
-			fields: fields{
+			c: &Command{
 				Job: &fakeTJ{
 					listJobResp: &storagetransfer.ListTransferJobsResponse{
 						TransferJobs: []*storagetransfer.TransferJob{
@@ -114,17 +104,8 @@ func TestCommand_ListJobs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Command{
-				Job:          tt.fields.Job,
-				Project:      tt.fields.Project,
-				SourceBucket: tt.fields.SourceBucket,
-				TargetBucket: tt.fields.TargetBucket,
-				Prefixes:     tt.fields.Prefixes,
-				StartTime:    tt.fields.StartTime,
-				AfterDate:    tt.fields.AfterDate,
-			}
 			ctx := context.Background()
-			if err := c.ListJobs(ctx); (err != nil) != tt.wantErr {
+			if err := tt.c.ListJobs(ctx); (err != nil) != tt.wantErr {
 				t.Errorf("Command.ListJobs() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
