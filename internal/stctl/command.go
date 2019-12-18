@@ -18,10 +18,13 @@ package stctl
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/m-lab/go/flagx"
+	"github.com/m-lab/go/logx"
 	"github.com/m-lab/go/rtx"
+	"github.com/stephen-soltesz/pretty"
 
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/storagetransfer/v1"
@@ -49,12 +52,60 @@ type Command struct {
 
 // ListJobs lists enabled transfer jobs.
 func (c *Command) ListJobs(ctx context.Context) error {
-	return nil
+	visit := func(resp *storagetransfer.ListTransferJobsResponse) error {
+		for _, job := range resp.TransferJobs {
+			// NB: One-time jobs have equal ScheduleStartDate and ScheduleEndDate.
+			// We only manage daily jobs that never terminate, which have no ScheduleEndDate.
+			if job.Schedule.ScheduleEndDate == nil {
+				logx.Debug.Print(pretty.Sprint(job))
+				including := "AllPrefixes"
+				if job.TransferSpec.ObjectConditions != nil {
+					including = fmt.Sprintf("%v", job.TransferSpec.ObjectConditions.IncludePrefixes)
+				}
+				fmt.Printf("%-25s starting:%s desc:%q including:%v\n",
+					job.Name, fmtTime(job.Schedule.StartTimeOfDay), job.Description, including)
+			}
+		}
+		return nil
+	}
+	return c.Job.List(ctx, visit)
 }
 
 // ListOperations lists past operations for the named job that started after c.AfterDate.
 func (c *Command) ListOperations(ctx context.Context, name string) error {
-	return nil
+	visit := func(r *storagetransfer.ListOperationsResponse) error {
+		for _, op := range r.Operations {
+			m := parseJobMetadata(op.Metadata)
+			if m.Start.Before(c.AfterDate) {
+				// Ignore operations before AfterDate.
+				continue
+			}
+			logx.Debug.Print(pretty.Sprint(op))
+			if m.TransferSpec == nil {
+				continue
+			}
+			fmt.Printf(
+				("Copy %s to %s including:%v :: " +
+					"Found %-7s Copied %-7s Skipped %-8s Failed %2q :: " +
+					"Lasted %f minutes with Status %s Started %s\n"),
+				m.TransferSpec.GcsDataSource.BucketName, m.TransferSpec.GcsDataSink.BucketName,
+				m.TransferSpec.ObjectConditions.IncludePrefixes,
+				m.Counters.ObjectsFound,
+				m.Counters.ObjectsCopied,
+				m.Counters.ObjectsFromSourceSkippedBySync,
+				m.Counters.ObjectsFromSourceFailed,
+				m.End.Sub(m.Start).Minutes(),
+				m.Status,
+				m.Start,
+			)
+		}
+		return nil
+	}
+	return c.Job.Operations(ctx, name, visit)
+}
+
+func fmtTime(t *storagetransfer.TimeOfDay) string {
+	return fmt.Sprintf("%02d:%02d:%02d", t.Hours, t.Minutes, t.Seconds)
 }
 
 // Create creates a new storage transfer job.
