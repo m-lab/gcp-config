@@ -110,11 +110,6 @@ func fmtTime(t *storagetransfer.TimeOfDay) string {
 	return fmt.Sprintf("%02d:%02d:%02d", t.Hours, t.Minutes, t.Seconds)
 }
 
-// Create creates a new storage transfer job.
-func (c *Command) Create(ctx context.Context) error {
-	return nil
-}
-
 // Disable marks the job status as 'DISABLED'.
 func (c *Command) Disable(ctx context.Context, name string) error {
 	return nil

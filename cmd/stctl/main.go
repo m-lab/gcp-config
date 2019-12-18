@@ -23,7 +23,9 @@ import (
 	"github.com/m-lab/gcp-config/transfer"
 
 	"github.com/m-lab/go/flagx"
+	"github.com/m-lab/go/pretty"
 	"github.com/m-lab/go/rtx"
+
 	"google.golang.org/api/storagetransfer/v1"
 )
 
@@ -104,7 +106,9 @@ func main() {
 	op := mustArg(0)
 	switch op {
 	case "create":
-		rtx.Must(cmd.Create(ctx), "Failed to create")
+		job, err := cmd.Create(ctx)
+		rtx.Must(err, "Failed to create")
+		pretty.Print(job)
 	case "sync":
 		rtx.Must(cmd.Sync(ctx), "Failed to sync")
 	case "disable":
