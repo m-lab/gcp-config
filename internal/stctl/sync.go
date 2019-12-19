@@ -13,20 +13,21 @@ import (
 	"google.golang.org/api/storagetransfer/v1"
 )
 
-// Sync guarantees that a job exists matching the current command parameters.
-// If a job with matching command parameters already exists, no action is taken.
-// If a matching description is found with different values for IncludePrefixes
-// or StartTimeOfDay, then the original job is disabled and a new job created.
+// Sync guarantees that a job exists matching the current command parameters. If
+// a job with matching command parameters already exists, no action is taken. If
+// a matching description is found with different values for IncludePrefixes or
+// StartTimeOfDay, then the original job is disabled and a new job created. In
+// either case, the found or newly created job is returned on success.
 func (c *Command) Sync(ctx context.Context) (*storagetransfer.TransferJob, error) {
 	var found *storagetransfer.TransferJob
-	errFound := fmt.Errorf("Found matching job")
+	notFound := fmt.Errorf("no matching job found")
 
 	// Generate canonical description from current config.
 	desc := getDesc(c.SourceBucket, c.TargetBucket)
 
 	// List jobs and find first that matches canonical description.
 	logx.Debug.Println("Listing jobs")
-	err := c.Client.Jobs(ctx, func(resp *storagetransfer.ListTransferJobsResponse) error {
+	findJob := func(resp *storagetransfer.ListTransferJobsResponse) error {
 		for _, job := range resp.TransferJobs {
 			if job.Schedule.ScheduleEndDate != nil {
 				// We only manage jobs without an end date.
@@ -34,15 +35,19 @@ func (c *Command) Sync(ctx context.Context) (*storagetransfer.TransferJob, error
 			}
 			logx.Debug.Print(pretty.Sprint(job))
 			if desc == job.Description {
-				// By convention there will only be a single transfer job between two buckets.
+				// Sync depends on the convention for storage transfer job managment where
+				// only a single transfer job exists between two buckets. So, the first
+				// matching job should be the only matching job.
 				found = job
-				return errFound
+				return nil
 			}
 		}
 		// Job was not found.
-		return nil
-	})
-	if err != errFound && err != nil {
+		return notFound
+	}
+
+	err := c.Client.Jobs(ctx, findJob)
+	if err != notFound && err != nil {
 		return nil, err
 	}
 	if found != nil {
