@@ -31,12 +31,16 @@ type fakeTJ struct {
 	listJobResp *storagetransfer.ListTransferJobsResponse
 	listOpsResp *storagetransfer.ListOperationsResponse
 	job         *storagetransfer.TransferJob
+	listErr     error
 	getErr      error
 	updateErr   error
 	createErr   error
 }
 
 func (f *fakeTJ) Jobs(ctx context.Context, visit func(resp *storagetransfer.ListTransferJobsResponse) error) error {
+	if f.listErr != nil {
+		return f.listErr
+	}
 	return visit(f.listJobResp)
 }
 
@@ -44,7 +48,7 @@ func (f *fakeTJ) Create(ctx context.Context, create *storagetransfer.TransferJob
 	if f.createErr != nil {
 		return nil, f.createErr
 	}
-	create.Name = "THIS-IS-A-FAKE-JOB-NAME"
+	create.Name = "THIS-IS-A-FAKE-ASSIGNED-JOB-NAME"
 	return create, nil
 }
 
