@@ -18,6 +18,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/m-lab/gcp-config/internal/stctl"
 	"github.com/m-lab/gcp-config/transfer"
@@ -30,12 +31,13 @@ import (
 )
 
 var (
-	project      string
-	sourceBucket string
-	destBucket   string
-	prefixes     flagx.StringArray
-	startTime    flagx.Time
-	afterDate    flagx.DateTime
+	project         string
+	sourceBucket    string
+	destBucket      string
+	allowedProjects string
+	prefixes        flagx.StringArray
+	startTime       flagx.Time
+	afterDate       flagx.DateTime
 )
 
 func init() {
@@ -45,6 +47,7 @@ func init() {
 	flag.Var(&prefixes, "include", "Only transfer files with given prefix. Default all prefixes. Can be specified multiple times.")
 	flag.Var(&startTime, "time", "Start daily transfer at this time (HH:MM:SS)")
 	flag.Var(&afterDate, "after", "Only list operations that ran after the given date. Default is all dates.")
+	flag.StringVar(&allowedProjects, "allowed-projects", "", "If specified, exit when the current -project is not found in allowed-projects. Default is allow all.")
 }
 
 var usageText = `
@@ -87,6 +90,11 @@ func mustArg(n int) string {
 func main() {
 	flag.Parse()
 	rtx.Must(flagx.ArgsFromEnv(flag.CommandLine), "Failed to parse flags")
+
+	if allowedProjects != "" && !strings.Contains(allowedProjects, project) {
+		// Exit cleanly.
+		os.Exit(0)
+	}
 
 	ctx := context.Background()
 	service, err := storagetransfer.NewService(ctx)
