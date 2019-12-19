@@ -113,7 +113,9 @@ func main() {
 		rtx.Must(cmd.Sync(ctx), "Failed to sync")
 	case "disable":
 		name := mustArg(1)
-		rtx.Must(cmd.Disable(ctx, name), "Failed to disable %q", name)
+		job, err := cmd.Disable(ctx, name)
+		rtx.Must(err, "Failed to disable %q", name)
+		pretty.Print(job)
 	case "list":
 		rtx.Must(cmd.ListJobs(ctx), "Failed to list jobs")
 	case "operations":

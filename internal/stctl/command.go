@@ -110,11 +110,6 @@ func fmtTime(t *storagetransfer.TimeOfDay) string {
 	return fmt.Sprintf("%02d:%02d:%02d", t.Hours, t.Minutes, t.Seconds)
 }
 
-// Disable marks the job status as 'DISABLED'.
-func (c *Command) Disable(ctx context.Context, name string) error {
-	return nil
-}
-
 // Sync guarantees that a job exists matching the current command parameters.
 // If a job with matching command parameters already exists, no action is taken.
 // If a matching description is found with different values for IncludePrefixes
