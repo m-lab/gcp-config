@@ -15,6 +15,7 @@ import (
 func (c *Command) Create(ctx context.Context) (*storagetransfer.TransferJob, error) {
 	spec := getSpec(c.SourceBucket, c.TargetBucket, c.Prefixes)
 	desc := getDesc(c.SourceBucket, c.TargetBucket)
+	ts := time.Now().UTC()
 	create := &storagetransfer.TransferJob{
 		Description: desc,
 		ProjectId:   c.Project,
@@ -24,9 +25,9 @@ func (c *Command) Create(ctx context.Context) (*storagetransfer.TransferJob, err
 			// Date to start transfers. May start today if StartTimeOfDay is in the future.
 			// If StartTimeOfDay is in the past, then the first transfer will be scheduled tomorrow.
 			ScheduleStartDate: &storagetransfer.Date{
-				Day:   int64(time.Now().UTC().Day()),
-				Month: int64(time.Now().UTC().Month()),
-				Year:  int64(time.Now().UTC().Year()),
+				Day:   int64(ts.Day()),
+				Month: int64(ts.Month()),
+				Year:  int64(ts.Year()),
 			},
 			StartTimeOfDay: &storagetransfer.TimeOfDay{
 				Hours:   int64(c.StartTime.Hour),

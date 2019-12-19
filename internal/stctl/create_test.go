@@ -3,15 +3,16 @@ package stctl
 import (
 	"context"
 	"errors"
-	"reflect"
 	"testing"
+	"time"
 
+	"github.com/go-test/deep"
 	"github.com/m-lab/go/flagx"
-	"github.com/m-lab/go/pretty"
 	"google.golang.org/api/storagetransfer/v1"
 )
 
 func TestCommand_Create(t *testing.T) {
+	ts := time.Now().UTC()
 	expected := &storagetransfer.TransferJob{
 		Description: "STCTL: daily copy of src-bucket to dest-bucket",
 		Name:        "THIS-IS-A-FAKE-JOB-NAME",
@@ -19,9 +20,9 @@ func TestCommand_Create(t *testing.T) {
 		Schedule: &storagetransfer.Schedule{
 			ScheduleEndDate: (*storagetransfer.Date)(nil),
 			ScheduleStartDate: &storagetransfer.Date{
-				Day:   18,
-				Month: 12,
-				Year:  2019,
+				Day:   int64(ts.Day()),
+				Month: int64(ts.Month()),
+				Year:  int64(ts.Year()),
 			},
 			StartTimeOfDay: &storagetransfer.TimeOfDay{
 				Hours:   2,
@@ -75,8 +76,8 @@ func TestCommand_Create(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Command.Create() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if !reflect.DeepEqual(job, expected) && !tt.wantErr {
-				t.Errorf("Command.Create() different job returned; got %s\n, want %s\n", pretty.Sprint(job), pretty.Sprint(expected))
+			if diff := deep.Equal(job, expected); diff != nil && !tt.wantErr {
+				t.Errorf("Command.Create() returned and expected jobs differ; %v", diff)
 			}
 		})
 	}
