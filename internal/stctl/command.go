@@ -110,14 +110,6 @@ func fmtTime(t *storagetransfer.TimeOfDay) string {
 	return fmt.Sprintf("%02d:%02d:%02d", t.Hours, t.Minutes, t.Seconds)
 }
 
-// Sync guarantees that a job exists matching the current command parameters.
-// If a job with matching command parameters already exists, no action is taken.
-// If a matching description is found with different values for IncludePrefixes
-// or StartTimeOfDay, then the original job is disabled and a new job created.
-func (c *Command) Sync(ctx context.Context) error {
-	return nil
-}
-
 // The Metadata field of storagetransfer.TransferOperation must be parsed from a
 // JSON blob. The structs below are a subset of fields available.
 func parseJobMetadata(m googleapi.RawMessage) *jobMetadata {

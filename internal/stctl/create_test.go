@@ -15,7 +15,7 @@ func TestCommand_Create(t *testing.T) {
 	ts := time.Now().UTC()
 	expected := &storagetransfer.TransferJob{
 		Description: "STCTL: daily copy of src-bucket to dest-bucket",
-		Name:        "THIS-IS-A-FAKE-JOB-NAME",
+		Name:        "THIS-IS-A-FAKE-ASSIGNED-JOB-NAME",
 		ProjectId:   "fake-mlab-testing",
 		Schedule: &storagetransfer.Schedule{
 			ScheduleEndDate: (*storagetransfer.Date)(nil),

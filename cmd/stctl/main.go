@@ -118,7 +118,9 @@ func main() {
 		rtx.Must(err, "Failed to create")
 		pretty.Print(job)
 	case "sync":
-		rtx.Must(cmd.Sync(ctx), "Failed to sync")
+		job, err := cmd.Sync(ctx)
+		rtx.Must(err, "Failed to sync")
+		pretty.Print(job)
 	case "disable":
 		name := mustArg(1)
 		job, err := cmd.Disable(ctx, name)
