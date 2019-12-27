@@ -3,7 +3,7 @@ package flaga
 import (
 	"testing"
 
-	"src/github.com/go-test/deep"
+	"github.com/go-test/deep"
 )
 
 func TestStrings(t *testing.T) {
