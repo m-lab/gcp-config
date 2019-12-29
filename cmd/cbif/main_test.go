@@ -1,7 +1,7 @@
 package main
 
 import (
-	"flag"
+	"os"
 	"testing"
 
 	"github.com/m-lab/gcp-config/flaga"
@@ -90,42 +90,72 @@ func Test_shouldRun(t *testing.T) {
 }
 
 func Test_main(t *testing.T) {
+	orig := os.Args
 	tests := []struct {
 		name     string
-		env      string
+		projEnv  string
 		projects flaga.Strings
+		args     []string
+		code     int
 	}{
 		{
-			name: "success-run",
-			env:  "bananas",
+			name:    "command-runs",
+			projEnv: "bananas",
 			projects: flaga.Strings{
 				Values:   []string{"bananas"},
 				Assigned: true,
 			},
+			args: []string{"echo"},
+			code: 0,
 		},
 		{
-			name: "success-do-not-run",
-			env:  "different-project",
+			name:    "command-does-not-run",
+			projEnv: "different-project",
 			projects: flaga.Strings{
 				Values:   []string{"bananas"},
 				Assigned: true,
 			},
+			args: []string{"echo"},
+			code: 0,
+		},
+		{
+			name:    "command-runs-and-exists-non-zero",
+			projEnv: "bananas",
+			projects: flaga.Strings{
+				Values:   []string{"bananas"},
+				Assigned: true,
+			},
+			args: []string{"false"},
+			code: 1,
 		},
 	}
 	for _, tt := range tests {
-		flag.CommandLine.Parse([]string{"echo"})
+		// Update os.Args for main's call to flag.Parse().
+		os.Args = append(orig, tt.args...)
 
+		// Use project flags and reset the other global flags.
 		ifProjects = tt.projects
-		// Reset other global flags.
 		ifBranches = flaga.Strings{}
 		ifEmpty = flaga.String{}
 		ifNotEmpty = flaga.String{}
+
+		// Save exit code.
+		code := 0
+		osExit = func(c int) {
+			code = c
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.env != "" {
-				d := osx.MustSetenv("PROJECT_ID", tt.env)
+			if tt.projEnv != "" {
+				d := osx.MustSetenv("PROJECT_ID", tt.projEnv)
 				defer d()
 			}
+
 			main()
+
+			if code != tt.code {
+				t.Errorf("main() wrong exit code; got %d, want %d", code, tt.code)
+			}
 		})
 	}
 }
