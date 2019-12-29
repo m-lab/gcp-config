@@ -65,27 +65,22 @@ func init() {
 
 func createCmd(ctx context.Context, args []string, sout, serr *os.File) *exec.Cmd {
 	log.Println("run:", args)
-	if len(args) == 0 {
-		args = []string{"echo"}
-	}
 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 	cmd.Stdout = sout
 	cmd.Stderr = serr
 	return cmd
 }
 
-func checkExit(cmd *exec.Cmd, err error) {
-	if cmd == nil || cmd.ProcessState == nil {
-		log.Fatalf("Failed to run commands: %s", err)
-	}
-	ps := cmd.ProcessState
-	if err != nil {
-		log.Printf("error: pid:%d code:%d err:%s\n", ps.Pid(), ps.ExitCode(), err.Error())
-		if !ignoreErrors {
-			os.Exit(ps.ExitCode())
-		}
-	} else {
+var osExit = os.Exit
+
+func checkExit(err error, ps *os.ProcessState) {
+	if err == nil {
 		log.Printf("success: pid:%d code:%d\n", ps.Pid(), ps.ExitCode())
+		return
+	}
+	log.Printf("error: pid:%d code:%d err:%s\n", ps.Pid(), ps.ExitCode(), err.Error())
+	if !ignoreErrors {
+		osExit(ps.ExitCode())
 	}
 }
 
@@ -119,15 +114,17 @@ func main() {
 	rtx.Must(flagx.ArgsFromEnv(flag.CommandLine), "Failed to parse flags")
 
 	if run, reason := shouldRun(); !run {
-		// Log reason and exit without error.
-		log.Println(reason)
-		return
+		log.Println(reason) // Log reason and exit without error.
+		osExit(0)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), commandTimeout)
 	defer cancel()
 
 	args := flag.CommandLine.Args()
-	cmd := createCmd(ctx, args, os.Stdout, os.Stderr)
-	checkExit(cmd, cmd.Run())
+	if len(args) > 0 {
+		cmd := createCmd(ctx, args, os.Stdout, os.Stderr)
+		err := cmd.Run()
+		checkExit(err, cmd.ProcessState)
+	}
 }
