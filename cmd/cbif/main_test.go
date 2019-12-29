@@ -17,14 +17,12 @@ func Test_shouldRun(t *testing.T) {
 		notEmpty flaga.String
 		envKey   string
 		envValue string
-		want     bool
 		wantErr  bool
 	}{
 		{
 			name:     "success",
 			envKey:   "PROJECT_ID",
 			envValue: "fake-project-id",
-			want:     true,
 		},
 		{
 			name:     "fail-with-projects",
@@ -34,7 +32,6 @@ func Test_shouldRun(t *testing.T) {
 				Values:   []string{"different-project-id"},
 				Assigned: true,
 			},
-			want:    false,
 			wantErr: true,
 		},
 		{
@@ -45,7 +42,6 @@ func Test_shouldRun(t *testing.T) {
 				Values:   []string{"different-branch"},
 				Assigned: true,
 			},
-			want:    false,
 			wantErr: true,
 		},
 		{
@@ -54,7 +50,6 @@ func Test_shouldRun(t *testing.T) {
 				Value:    "not-empty-value",
 				Assigned: true,
 			},
-			want:    false,
 			wantErr: true,
 		},
 		{
@@ -63,7 +58,6 @@ func Test_shouldRun(t *testing.T) {
 				Value:    "", // value is empty.
 				Assigned: true,
 			},
-			want:    false,
 			wantErr: true,
 		},
 	}
@@ -77,13 +71,10 @@ func Test_shouldRun(t *testing.T) {
 				d := osx.MustSetenv(tt.envKey, tt.envValue)
 				defer d()
 			}
-			got, err := shouldRun()
+			err := shouldRun()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("shouldRun() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-			if got != tt.want {
-				t.Errorf("shouldRun() = %v, want %v", got, tt.want)
 			}
 		})
 	}

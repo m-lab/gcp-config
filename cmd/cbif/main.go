@@ -84,36 +84,36 @@ func checkExit(err error, ps *os.ProcessState) {
 	}
 }
 
-func shouldRun() (bool, error) {
+func shouldRun() error {
 	project := os.Getenv("PROJECT_ID")
 	if ifProjects.Assigned && !ifProjects.Contains(project) {
 		err := fmt.Errorf("SKIP: Current project (%s) does not match projects values (%v)",
 			project, ifProjects.Values)
-		return false, err
+		return err
 	}
 	branch := os.Getenv("BRANCH_NAME")
 	if ifBranches.Assigned && !ifBranches.Contains(branch) {
 		err := fmt.Errorf("SKIP: Current branch (%s) does not match branch values (%v)",
 			project, ifBranches.Values)
-		return false, err
+		return err
 	}
 	if ifEmpty.Assigned && ifEmpty.Value != "" {
 		err := fmt.Errorf("SKIP: if-empty value was not empty: %q", ifEmpty.Value)
-		return false, err
+		return err
 	}
 	if ifNotEmpty.Assigned && ifNotEmpty.Value == "" {
 		err := fmt.Errorf("SKIP: if-not-empty value was empty")
-		return false, err
+		return err
 	}
 	// Default to true.
-	return true, nil
+	return nil
 }
 
 func main() {
 	flag.Parse()
 	rtx.Must(flagx.ArgsFromEnv(flag.CommandLine), "Failed to parse flags")
 
-	if run, reason := shouldRun(); !run {
+	if reason := shouldRun(); reason != nil {
 		log.Println(reason) // Log reason and exit without error.
 		osExit(0)
 	}
