@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/m-lab/go/flagx"
+	"github.com/m-lab/go/pretty"
 	"github.com/m-lab/go/rtx"
-	"src/github.com/kr/pretty"
 )
 
 /*
