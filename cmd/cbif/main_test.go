@@ -13,8 +13,8 @@ func Test_shouldRun(t *testing.T) {
 		name     string
 		projects flaga.Strings
 		branches flaga.Strings
-		empty    flaga.String
-		notEmpty flaga.String
+		pr       flaga.String
+		tag      flaga.String
 		envKey   string
 		envValue string
 		wantErr  bool
@@ -46,16 +46,16 @@ func Test_shouldRun(t *testing.T) {
 		},
 		{
 			name: "fail-with-empty",
-			empty: flaga.String{
-				Value:    "not-empty-value",
+			pr: flaga.String{
+				Value:    "",
 				Assigned: true,
 			},
 			wantErr: true,
 		},
 		{
 			name: "fail-with-notempty",
-			notEmpty: flaga.String{
-				Value:    "", // value is empty.
+			tag: flaga.String{
+				Value:    "",
 				Assigned: true,
 			},
 			wantErr: true,
@@ -63,10 +63,10 @@ func Test_shouldRun(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ifProjects = tt.projects
-			ifBranches = tt.branches
-			ifNotEmpty = tt.notEmpty
-			ifEmpty = tt.empty
+			projects = tt.projects
+			branches = tt.branches
+			tag = tt.tag
+			pr = tt.pr
 			if tt.envKey != "" {
 				d := osx.MustSetenv(tt.envKey, tt.envValue)
 				defer d()
@@ -125,10 +125,10 @@ func Test_main(t *testing.T) {
 		os.Args = append(orig, tt.args...)
 
 		// Use project flags and reset the other global flags.
-		ifProjects = tt.projects
-		ifBranches = flaga.Strings{}
-		ifEmpty = flaga.String{}
-		ifNotEmpty = flaga.String{}
+		projects = tt.projects
+		branches = flaga.Strings{}
+		tag = flaga.String{}
+		pr = flaga.String{}
 
 		// Save exit code.
 		code := 0
