@@ -114,8 +114,8 @@ func asEnvNames(original map[string]struct{}) foundFlags {
 func main() {
 	flag.Parse()
 	rtx.Must(flagx.ArgsFromEnv(flag.CommandLine), "Failed to parse flags")
-
 	v := asEnvNames(flagx.AssignedFlags(flag.CommandLine))
+	pretty.Print(os.Args)
 	pretty.Print(v)
 	reason, run := shouldRun(v)
 	log.Println(reason)
