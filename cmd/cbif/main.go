@@ -103,18 +103,26 @@ func (f foundFlags) Assigned(k string) bool {
 	return found
 }
 
-func asEnvNames(original map[string]struct{}) foundFlags {
+func assignedFlags(fs *flag.FlagSet) foundFlags {
 	assigned := make(map[string]struct{})
-	for k := range original {
-		assigned[flagx.MakeShellVariableName(k)] = struct{}{}
-	}
+	// Assignments from the command line.
+	fs.Visit(func(f *flag.Flag) {
+		assigned[flagx.MakeShellVariableName(f.Name)] = struct{}{}
+	})
+	// Assignments from the environment.
+	fs.VisitAll(func(f *flag.Flag) {
+		envVarName := flagx.MakeShellVariableName(f.Name)
+		if _, ok := os.LookupEnv(envVarName); ok {
+			assigned[envVarName] = struct{}{}
+		}
+	})
 	return assigned
 }
 
 func main() {
 	flag.Parse()
 	rtx.Must(flagx.ArgsFromEnv(flag.CommandLine), "Failed to parse flags")
-	v := asEnvNames(flagx.AssignedFlags(flag.CommandLine))
+	v := assignedFlags(flag.CommandLine)
 	pretty.Print(os.Args)
 	pretty.Print(v)
 	reason, run := shouldRun(v)
