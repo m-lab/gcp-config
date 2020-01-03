@@ -1,7 +1,3 @@
-options:
-  env:
-    - 'PROJECT_ID=$PROJECT_ID'
-
 steps:
 # Create the gcp-config image for later steps.
 - name: gcr.io/cloud-builders/docker
@@ -13,6 +9,7 @@ steps:
 # 02:10:00 Configure daily pusher to local archive transfer.
 - name: gcp-config-cbif
   env:
+  - PROJECT_ID=$PROJECT_ID
   - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
   args: [
     'stctl', '-gcs.source=pusher-$PROJECT_ID',
@@ -28,6 +25,7 @@ steps:
 # 03:10:00 Configure daily local archive to public archive transfer.
 - name: gcp-config-cbif
   env:
+  - PROJECT_ID=$PROJECT_ID
   - PROJECT_IN=measurement-lab
   args: [
     'stctl', '-gcs.source=archive-mlab-oti',
@@ -43,6 +41,7 @@ steps:
 #
 #- name: gcp-config-cbif
 #  env:
+#  - PROJECT_ID=$PROJECT_ID
 #  - PROJECT_IN=mlab-backups
 #  args: [
 #    'stctl', '-gcs.source=archive-measurement-lab',
