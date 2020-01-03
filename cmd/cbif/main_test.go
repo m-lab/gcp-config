@@ -1,134 +1,63 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
-	"github.com/m-lab/gcp-config/flaga"
+	"github.com/m-lab/go/flagx"
 	"github.com/m-lab/go/osx"
 )
-
-func Test_shouldRun(t *testing.T) {
-	tests := []struct {
-		name     string
-		projects flaga.Strings
-		branches flaga.Strings
-		pr       flaga.String
-		tag      flaga.String
-		envKey   string
-		envValue string
-		wantErr  bool
-	}{
-		{
-			name:     "success",
-			envKey:   "PROJECT_ID",
-			envValue: "fake-project-id",
-		},
-		{
-			name:     "fail-with-projects",
-			envKey:   "PROJECT_ID",
-			envValue: "fake-project-id",
-			projects: flaga.Strings{
-				Values:   []string{"different-project-id"},
-				Assigned: true,
-			},
-			wantErr: true,
-		},
-		{
-			name:     "fail-with-branches",
-			envKey:   "BRANCH_NAME",
-			envValue: "fake-branch",
-			branches: flaga.Strings{
-				Values:   []string{"different-branch"},
-				Assigned: true,
-			},
-			wantErr: true,
-		},
-		{
-			name: "fail-with-empty",
-			pr: flaga.String{
-				Value:    "",
-				Assigned: true,
-			},
-			wantErr: true,
-		},
-		{
-			name: "fail-with-notempty",
-			tag: flaga.String{
-				Value:    "",
-				Assigned: true,
-			},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			projects = tt.projects
-			branches = tt.branches
-			tag = tt.tag
-			pr = tt.pr
-			if tt.envKey != "" {
-				d := osx.MustSetenv(tt.envKey, tt.envValue)
-				defer d()
-			}
-			err := shouldRun()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("shouldRun() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-		})
-	}
-}
 
 func Test_main(t *testing.T) {
 	orig := os.Args
 	tests := []struct {
-		name     string
-		projEnv  string
-		projects flaga.Strings
-		args     []string
-		code     int
+		name      string
+		projEnv   string
+		branchEnv string
+		args      []string
+		code      int
 	}{
 		{
-			name:    "command-runs",
-			projEnv: "bananas",
-			projects: flaga.Strings{
-				Values:   []string{"bananas"},
-				Assigned: true,
-			},
+			name: "command-runs-by-default",
 			args: []string{"echo"},
 			code: 0,
 		},
 		{
-			name:    "command-does-not-run",
-			projEnv: "different-project",
-			projects: flaga.Strings{
-				Values:   []string{"bananas"},
-				Assigned: true,
-			},
-			args: []string{"echo"},
-			code: 0,
+			name:      "command-runs-correct-branch",
+			branchEnv: "correct-branch",
+			projEnv:   "correct-project",
+			args:      []string{"-branch-in=correct-branch", "-project-in=correct-project", "echo"},
+			code:      0,
+		},
+		{
+			name:      "command-does-not-run-wrong-branch",
+			branchEnv: "wrong-branch",
+			projEnv:   "correct-project",
+			args:      []string{"-branch-in=correct-branch", "-project-in=correct-project", "echo"},
+			code:      0,
+		},
+		{
+			name:    "command-does-not-run-wrong-project",
+			projEnv: "wrong-project",
+			args:    []string{"-project-in=current-project", "echo"},
+			code:    0,
 		},
 		{
 			name:    "command-runs-and-exists-non-zero",
-			projEnv: "bananas",
-			projects: flaga.Strings{
-				Values:   []string{"bananas"},
-				Assigned: true,
-			},
-			args: []string{"false"},
-			code: 1,
+			projEnv: "current",
+			args:    []string{"-project-in=current", "false"},
+			code:    1,
 		},
 	}
 	for _, tt := range tests {
 		// Update os.Args for main's call to flag.Parse().
 		os.Args = append(orig, tt.args...)
+		fmt.Println("ARG:", os.Args)
 
-		// Use project flags and reset the other global flags.
-		projects = tt.projects
-		branches = flaga.Strings{}
-		tag = flaga.String{}
-		pr = flaga.String{}
+		// Reset the other global flags.
+		projects = flagx.StringArray{}
+		branches = flagx.StringArray{}
 
 		// Save exit code.
 		code := 0
@@ -139,6 +68,10 @@ func Test_main(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.projEnv != "" {
 				d := osx.MustSetenv("PROJECT_ID", tt.projEnv)
+				defer d()
+			}
+			if tt.branchEnv != "" {
+				d := osx.MustSetenv("BRANCH_NAME", tt.branchEnv)
 				defer d()
 			}
 

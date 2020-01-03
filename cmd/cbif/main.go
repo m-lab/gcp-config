@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/m-lab/gcp-config/flaga"
 	"github.com/m-lab/go/flagx"
 	"github.com/m-lab/go/rtx"
 )
@@ -41,10 +40,8 @@ PR builds:
 var (
 	ignoreErrors   bool
 	commandTimeout time.Duration
-	projects       flaga.Strings
-	branches       flaga.Strings
-	tag            flaga.String
-	pr             flaga.String
+	projects       flagx.StringArray
+	branches       flagx.StringArray
 )
 
 func init() {
@@ -52,8 +49,6 @@ func init() {
 	flag.DurationVar(&commandTimeout, "command-timeout", time.Hour, "Individual time out for each command to complete.")
 	flag.Var(&projects, "project-in", "Run if the current project is one of the conditional projects.")
 	flag.Var(&branches, "branch-in", "Run if the current branch is one of the conditional branches.")
-	flag.Var(&tag, "tag-defined", "Run if the given tag name is not empty.")
-	flag.Var(&pr, "pr-defined", "Run if the given pr value is not empty.")
 }
 
 func createCmd(ctx context.Context, args []string, sout, serr *os.File) *exec.Cmd {
@@ -77,33 +72,51 @@ func checkExit(err error, ps *os.ProcessState) {
 	}
 }
 
-func shouldRun() error {
+func shouldRun(flags foundFlags) (string, bool) {
 	project := os.Getenv("PROJECT_ID")
-	if projects.Assigned && !projects.Contains(project) {
-		return fmt.Errorf("SKIP: Current project (%s) does not match projects values (%v)",
-			project, projects.Values)
+	if flags.Assigned("PROJECT_IN") && !projects.Contains(project) {
+		return fmt.Sprintf("RUN:false PROJECT_IN=%v does not include current project (%s)\n",
+			projects, project), false
 	}
 	branch := os.Getenv("BRANCH_NAME")
-	if branches.Assigned && !branches.Contains(branch) {
-		return fmt.Errorf("SKIP: Current branch (%s) does not match branch values (%v)",
-			project, branches.Values)
+	if flags.Assigned("BRANCH_IN") && !branches.Contains(branch) {
+		return fmt.Sprintf("RUN:false BRANCH_IN=%v does not include current branch (%s)\n",
+			branches, branch), false
 	}
-	if tag.Assigned && tag.Value == "" {
-		return fmt.Errorf("SKIP: tag value was empty")
+
+	reason := "RUN:true"
+	if flags.Assigned("PROJECT_IN") {
+		reason += fmt.Sprintf(" AND PROJECT_IN=%v contains %q", projects, project)
 	}
-	if pr.Assigned && pr.Value == "" {
-		return fmt.Errorf("SKIP: PR value was empty")
+	if flags.Assigned("BRANCH_IN") {
+		reason += fmt.Sprintf(" AND BRANCH_IN=%v contains %q", branches, branch)
 	}
-	// Default to true.
-	return nil
+	return reason, true
+}
+
+// foundFlags tracks whether flags were found during flag parsing.
+type foundFlags map[string]struct{}
+
+func (f foundFlags) Assigned(k string) bool {
+	_, found := f[k]
+	return found
+}
+
+func asEnvNames(original map[string]struct{}) foundFlags {
+	assigned := make(map[string]struct{})
+	for k := range original {
+		assigned[flagx.MakeShellVariableName(k)] = struct{}{}
+	}
+	return assigned
 }
 
 func main() {
 	flag.Parse()
 	rtx.Must(flagx.ArgsFromEnv(flag.CommandLine), "Failed to parse flags")
 
-	if reason := shouldRun(); reason != nil {
-		log.Println(reason) // Log reason and exit without error.
+	reason, run := shouldRun(asEnvNames(flagx.AssignedFlags(flag.CommandLine)))
+	log.Println(reason)
+	if !run {
 		osExit(0)
 	}
 
