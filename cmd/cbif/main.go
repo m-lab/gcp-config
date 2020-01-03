@@ -11,6 +11,7 @@ import (
 
 	"github.com/m-lab/go/flagx"
 	"github.com/m-lab/go/rtx"
+	"src/github.com/kr/pretty"
 )
 
 /*
@@ -114,7 +115,9 @@ func main() {
 	flag.Parse()
 	rtx.Must(flagx.ArgsFromEnv(flag.CommandLine), "Failed to parse flags")
 
-	reason, run := shouldRun(asEnvNames(flagx.AssignedFlags(flag.CommandLine)))
+	v := asEnvNames(flagx.AssignedFlags(flag.CommandLine))
+	pretty.Print(v)
+	reason, run := shouldRun(v)
 	log.Println(reason)
 	if !run {
 		osExit(0)
