@@ -46,6 +46,10 @@ var (
 )
 
 func init() {
+	setupFlags()
+}
+
+func setupFlags() {
 	flag.BoolVar(&ignoreErrors, "ignore-errors", false, "Ignore non-zero exit codes when executing commands.")
 	flag.DurationVar(&commandTimeout, "command-timeout", time.Hour, "Individual time out for each command to complete.")
 	flag.Var(&projects, "project-in", "Run if the current project is one of the conditional projects.")
@@ -76,12 +80,12 @@ func checkExit(err error, ps *os.ProcessState) {
 func shouldRun(flags foundFlags) (string, bool) {
 	project := os.Getenv("PROJECT_ID")
 	if flags.Assigned("PROJECT_IN") && !projects.Contains(project) {
-		return fmt.Sprintf("RUN:false PROJECT_IN=%v does not include current project (%s)\n",
+		return fmt.Sprintf("RUN:false PROJECT_IN=%v does not include current project (%s)",
 			projects, project), false
 	}
 	branch := os.Getenv("BRANCH_NAME")
 	if flags.Assigned("BRANCH_IN") && !branches.Contains(branch) {
-		return fmt.Sprintf("RUN:false BRANCH_IN=%v does not include current branch (%s)\n",
+		return fmt.Sprintf("RUN:false BRANCH_IN=%v does not include current branch (%s)",
 			branches, branch), false
 	}
 
