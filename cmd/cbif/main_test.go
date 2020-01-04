@@ -15,6 +15,7 @@ func Test_main(t *testing.T) {
 		name      string
 		projEnv   string
 		branchEnv string
+		env       map[string]string
 		args      []string
 		code      int
 	}{
@@ -24,11 +25,15 @@ func Test_main(t *testing.T) {
 			code: 0,
 		},
 		{
-			name:      "command-runs-correct-branch",
+			name:      "command-runs-using-env-correct-branch",
 			branchEnv: "correct-branch",
 			projEnv:   "correct-project",
-			args:      []string{"-branch-in=correct-branch", "-project-in=correct-project", "echo"},
-			code:      0,
+			env: map[string]string{
+				"BRANCH_IN":  "correct-branch",
+				"PROJECT_IN": "correct-project",
+			},
+			args: []string{"echo", "env"},
+			code: 0,
 		},
 		{
 			name:      "command-does-not-run-wrong-branch",
@@ -66,6 +71,10 @@ func Test_main(t *testing.T) {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
+			for e, v := range tt.env {
+				d := osx.MustSetenv(e, v)
+				defer d()
+			}
 			if tt.projEnv != "" {
 				d := osx.MustSetenv("PROJECT_ID", tt.projEnv)
 				defer d()

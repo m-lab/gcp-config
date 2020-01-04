@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/m-lab/go/flagx"
-	"github.com/m-lab/go/pretty"
+	"github.com/m-lab/go/logx"
 	"github.com/m-lab/go/rtx"
 )
 
@@ -107,12 +107,14 @@ func assignedFlags(fs *flag.FlagSet) foundFlags {
 	assigned := make(map[string]struct{})
 	// Assignments from the command line.
 	fs.Visit(func(f *flag.Flag) {
+		logx.Debug.Println("FOUND-FLAG:", flagx.MakeShellVariableName(f.Name))
 		assigned[flagx.MakeShellVariableName(f.Name)] = struct{}{}
 	})
 	// Assignments from the environment.
 	fs.VisitAll(func(f *flag.Flag) {
 		envVarName := flagx.MakeShellVariableName(f.Name)
-		if _, ok := os.LookupEnv(envVarName); ok {
+		if val, ok := os.LookupEnv(envVarName); ok {
+			logx.Debug.Println("FOUND-ENV :", envVarName, val)
 			assigned[envVarName] = struct{}{}
 		}
 	})
@@ -122,10 +124,8 @@ func assignedFlags(fs *flag.FlagSet) foundFlags {
 func main() {
 	flag.Parse()
 	rtx.Must(flagx.ArgsFromEnv(flag.CommandLine), "Failed to parse flags")
-	v := assignedFlags(flag.CommandLine)
-	pretty.Print(os.Args)
-	pretty.Print(v)
-	reason, run := shouldRun(v)
+
+	reason, run := shouldRun(assignedFlags(flag.CommandLine))
 	log.Println(reason)
 	if !run {
 		osExit(0)
