@@ -107,6 +107,8 @@ func (f foundFlags) Assigned(k string) bool {
 	return found
 }
 
+// assignedFlags discovers the set of flags specified either directly on the
+// command line or indirectly through the environment.
 func assignedFlags(fs *flag.FlagSet) foundFlags {
 	assigned := make(map[string]struct{})
 	// Assignments from the command line.
