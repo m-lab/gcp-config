@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/m-lab/go/flagx"
+	"github.com/m-lab/go/logx"
 	"github.com/m-lab/go/rtx"
 )
 
@@ -45,6 +46,10 @@ var (
 )
 
 func init() {
+	setupFlags()
+}
+
+func setupFlags() {
 	flag.BoolVar(&ignoreErrors, "ignore-errors", false, "Ignore non-zero exit codes when executing commands.")
 	flag.DurationVar(&commandTimeout, "command-timeout", time.Hour, "Individual time out for each command to complete.")
 	flag.Var(&projects, "project-in", "Run if the current project is one of the conditional projects.")
@@ -75,12 +80,12 @@ func checkExit(err error, ps *os.ProcessState) {
 func shouldRun(flags foundFlags) (string, bool) {
 	project := os.Getenv("PROJECT_ID")
 	if flags.Assigned("PROJECT_IN") && !projects.Contains(project) {
-		return fmt.Sprintf("RUN:false PROJECT_IN=%v does not include current project (%s)\n",
+		return fmt.Sprintf("RUN:false PROJECT_IN=%v does not include current project (%s)",
 			projects, project), false
 	}
 	branch := os.Getenv("BRANCH_NAME")
 	if flags.Assigned("BRANCH_IN") && !branches.Contains(branch) {
-		return fmt.Sprintf("RUN:false BRANCH_IN=%v does not include current branch (%s)\n",
+		return fmt.Sprintf("RUN:false BRANCH_IN=%v does not include current branch (%s)",
 			branches, branch), false
 	}
 
@@ -102,11 +107,23 @@ func (f foundFlags) Assigned(k string) bool {
 	return found
 }
 
-func asEnvNames(original map[string]struct{}) foundFlags {
+// assignedFlags discovers the set of flags specified either directly on the
+// command line or indirectly through the environment.
+func assignedFlags(fs *flag.FlagSet) foundFlags {
 	assigned := make(map[string]struct{})
-	for k := range original {
-		assigned[flagx.MakeShellVariableName(k)] = struct{}{}
-	}
+	// Assignments from the command line.
+	fs.Visit(func(f *flag.Flag) {
+		logx.Debug.Println("FOUND-FLAG:", flagx.MakeShellVariableName(f.Name))
+		assigned[flagx.MakeShellVariableName(f.Name)] = struct{}{}
+	})
+	// Assignments from the environment.
+	fs.VisitAll(func(f *flag.Flag) {
+		envVarName := flagx.MakeShellVariableName(f.Name)
+		if val, ok := os.LookupEnv(envVarName); ok {
+			logx.Debug.Println("FOUND-ENV :", envVarName, val)
+			assigned[envVarName] = struct{}{}
+		}
+	})
 	return assigned
 }
 
@@ -114,7 +131,7 @@ func main() {
 	flag.Parse()
 	rtx.Must(flagx.ArgsFromEnv(flag.CommandLine), "Failed to parse flags")
 
-	reason, run := shouldRun(asEnvNames(flagx.AssignedFlags(flag.CommandLine)))
+	reason, run := shouldRun(assignedFlags(flag.CommandLine))
 	log.Println(reason)
 	if !run {
 		osExit(0)

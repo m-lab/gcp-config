@@ -18,7 +18,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/m-lab/gcp-config/internal/stctl"
 	"github.com/m-lab/gcp-config/transfer"
@@ -31,23 +30,21 @@ import (
 )
 
 var (
-	project         string
-	sourceBucket    string
-	destBucket      string
-	allowedProjects string
-	prefixes        flagx.StringArray
-	startTime       flagx.Time
-	afterDate       flagx.DateTime
+	project      string
+	sourceBucket string
+	destBucket   string
+	prefixes     flagx.StringArray
+	startTime    flagx.Time
+	afterDate    flagx.DateTime
 )
 
 func init() {
-	flag.StringVar(&project, "project", "", "GCP project to sync transfer job.")
+	flag.StringVar(&project, "project-id", "", "GCP project to sync transfer job.")
 	flag.StringVar(&sourceBucket, "gcs.source", "", "Source GCS bucket.")
 	flag.StringVar(&destBucket, "gcs.target", "", "Destination bucket.")
 	flag.Var(&prefixes, "include", "Only transfer files with given prefix. Default all prefixes. Can be specified multiple times.")
 	flag.Var(&startTime, "time", "Start daily transfer at this time (HH:MM:SS)")
 	flag.Var(&afterDate, "after", "Only list operations that ran after the given date. Default is all dates.")
-	flag.StringVar(&allowedProjects, "allowed-projects", "", "If specified, exit when the current -project is not found in allowed-projects. Default is allow all.")
 }
 
 var usageText = `
@@ -59,14 +56,14 @@ DESCRIPTION
   list past transfer operations for existing jobs.
 
 EXAMPLES
-  stctl -project <project> list
+  stctl -project-id <project> list
 
-  stctl -project <project> operations <job name>
+  stctl -project-id <project> operations <job name>
 
-  stctl -project <project> create -gcs.source <bucket> -gcs.target <bucket> \
+  stctl -project-id <project> create -gcs.source <bucket> -gcs.target <bucket> \
     -time <HH:MM:SS> -include ndt -include host -include neubot -include utilization
 
-  stctl -project <project> disable <job name>
+  stctl -project-id <project> disable <job name>
 
 USAGE
 `
@@ -90,11 +87,6 @@ func mustArg(n int) string {
 func main() {
 	flag.Parse()
 	rtx.Must(flagx.ArgsFromEnv(flag.CommandLine), "Failed to parse flags")
-
-	if allowedProjects != "" && !strings.Contains(allowedProjects, project) {
-		// Exit cleanly.
-		os.Exit(0)
-	}
 
 	ctx := context.Background()
 	service, err := storagetransfer.NewService(ctx)

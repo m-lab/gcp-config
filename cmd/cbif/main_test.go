@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"os"
 	"testing"
 
@@ -10,54 +10,55 @@ import (
 )
 
 func Test_main(t *testing.T) {
-	orig := os.Args
+	// orig := os.Args
 	tests := []struct {
 		name      string
 		projEnv   string
 		branchEnv string
+		env       map[string]string
 		args      []string
 		code      int
 	}{
 		{
-			name: "command-runs-by-default",
-			args: []string{"echo"},
-			code: 0,
-		},
-		{
-			name:      "command-runs-correct-branch",
+			name:      "command-runs-using-env-correct-branch",
 			branchEnv: "correct-branch",
 			projEnv:   "correct-project",
-			args:      []string{"-branch-in=correct-branch", "-project-in=correct-project", "echo"},
-			code:      0,
+			env: map[string]string{
+				"BRANCH_IN":  "correct-branch",
+				"PROJECT_IN": "correct-project",
+			},
+			args: []string{"fake-cbif", "echo", "env"},
+			code: 0,
 		},
 		{
 			name:      "command-does-not-run-wrong-branch",
 			branchEnv: "wrong-branch",
-			projEnv:   "correct-project",
-			args:      []string{"-branch-in=correct-branch", "-project-in=correct-project", "echo"},
+			args:      []string{"fake-cbif", "-branch-in=correct-branch", "echo"},
 			code:      0,
 		},
 		{
 			name:    "command-does-not-run-wrong-project",
 			projEnv: "wrong-project",
-			args:    []string{"-project-in=current-project", "echo"},
+			args:    []string{"fake-cbif", "-project-in=current-project", "echo"},
 			code:    0,
 		},
 		{
-			name:    "command-runs-and-exists-non-zero",
-			projEnv: "current",
-			args:    []string{"-project-in=current", "false"},
-			code:    1,
+			name: "command-runs-and-exists-non-zero",
+			args: []string{"fake-cbif", "false"},
+			code: 1,
 		},
 	}
 	for _, tt := range tests {
 		// Update os.Args for main's call to flag.Parse().
-		os.Args = append(orig, tt.args...)
-		fmt.Println("ARG:", os.Args)
+		os.Args = tt.args
 
 		// Reset the other global flags.
 		projects = flagx.StringArray{}
 		branches = flagx.StringArray{}
+
+		// Completely reset command line flags.
+		flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+		setupFlags()
 
 		// Save exit code.
 		code := 0
@@ -66,6 +67,10 @@ func Test_main(t *testing.T) {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
+			for e, v := range tt.env {
+				d := osx.MustSetenv(e, v)
+				defer d()
+			}
 			if tt.projEnv != "" {
 				d := osx.MustSetenv("PROJECT_ID", tt.projEnv)
 				defer d()
