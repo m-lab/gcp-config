@@ -10,14 +10,15 @@ steps:
   ]
 
 # 02:00:00 Nodes upload to the pusher-* bucket. 2hrs is the maximum upload delay.
-# 02:10:00 Configure daily pusher to local archive transfer.
+# 02:10:00 Last upload from utilization/switch archives.
+# 02:30:00 Configure daily pusher to local archive transfer.
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
   args: [
     'stctl', '-gcs.source=pusher-$PROJECT_ID',
              '-gcs.target=archive-$PROJECT_ID',
-             '-time=02:10:00',
+             '-time=02:30:00',
              '-include=ndt',
              '-include=host',
              '-include=neubot',
@@ -25,28 +26,26 @@ steps:
              'sync'
   ]
 
-# 03:10:00 Configure daily local archive to public archive transfer.
+# 03:30:00 Configure daily local archive to public archive transfer.
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=measurement-lab
   args: [
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
-             '-time=03:10:00',
+             '-time=03:30:00',
              'sync'
   ]
 
-# 04:10:00 Gardener or other jobs that depend on the public archive being up to date may run.
-# 04:10:00 Configure daily public archive to backup transfer.
-
+# 04:30:00 Gardener or other jobs that depend on the public archive being up to date may run.
+# 04:30:00 Configure daily public archive to backup transfer.
 # NOTE: mlab-backups intentionally restricts access. This configuration is documentation.
-#
 #- name: gcp-config-cbif
 #  env:
 #  - PROJECT_IN=mlab-backups
 #  args: [
 #    'stctl', '-gcs.source=archive-measurement-lab',
 #             '-gcs.target=mlab-cold-storage-backup',
-#             '-time=04:10:00',
+#             '-time=04:30:00',
 #             'sync'
 #  ]
