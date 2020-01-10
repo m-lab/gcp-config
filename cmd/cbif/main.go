@@ -149,9 +149,25 @@ func assignedFlags(fs *flag.FlagSet) foundFlags {
 	return assigned
 }
 
-func shouldSetupGit(flags foundFlags) bool {
+func setupGit(flags foundFlags) {
 	_, gitErr := os.Stat(".git")
-	return gitErr != nil && (flags.Assigned("GIT_ORIGIN_URL") && flags.Assigned("COMMIT_SHA"))
+	if gitErr != nil && (flags.Assigned("GIT_ORIGIN_URL") && flags.Assigned("COMMIT_SHA")) {
+		// Setup the .git repo if it's missing and we have the necessary info.
+		rtx.Must(createGit(gitOriginURL, commitSha), "Failed to create .git directory")
+	}
+}
+
+func setupWorkspaceLink(flags foundFlags) {
+	if flags.Assigned("WORKSPACE_LINK") {
+		// The process cwd maintained by the Linux kernel is the real, physical
+		// path. We want processes to execute with a cwd within the symbolically
+		// linked directory. Most shells manage PWD / OLDPWD in environment
+		// variables independent of the kernel and libc. The Go os.Getwd() follows
+		// this convention, by returning PWD if found, or using Getwd syscall
+		// otherwise. By setting PWD, we allow processes that use this convention to
+		// use the symlinked directory as the current working directory.
+		rtx.Must(os.Setenv("PWD", mustLinkWorkspace(workspaceLink)), "Failed to set PWD")
+	}
 }
 
 var pipeCombinedOutput = pipe.CombinedOutput
@@ -179,6 +195,20 @@ func mustLinkWorkspace(absProjPath string) string {
 	return absProjPath
 }
 
+func prepareCommands(args []string) [][]string {
+	commands := [][]string{}
+	if singleCmd {
+		if len(args) > 0 {
+			commands = append(commands, args)
+		}
+	} else {
+		for _, arg := range args {
+			commands = append(commands, mustSplitCmd(arg))
+		}
+	}
+	return commands
+}
+
 func main() {
 	flag.Parse()
 	rtx.Must(flagx.ArgsFromEnv(flag.CommandLine), "Failed to parse flags")
@@ -190,36 +220,13 @@ func main() {
 		osExit(0)
 	}
 
-	if shouldSetupGit(flags) {
-		// Setup the .git repo if it's missing and we have the necessary info.
-		rtx.Must(createGit(gitOriginURL, commitSha), "Failed to create .git directory")
-	}
+	setupGit(flags)
+	setupWorkspaceLink(flags)
 
-	if flags.Assigned("WORKSPACE_LINK") {
-		// The process cwd maintained by the Linux kernel is the real, physical
-		// path. We want processes to execute with a cwd within the symbolically
-		// linked directory. Most shells manage PWD / OLDPWD in environment
-		// variables independent of the kernel and libc. The Go os.Getwd() follows
-		// this convention, by returning PWD if found, or using Getwd syscall
-		// otherwise. By setting PWD, we allow processes that use this convention to
-		// use the symlinked directory as the current working directory.
-		rtx.Must(os.Setenv("PWD", mustLinkWorkspace(workspaceLink)), "Failed to set PWD")
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), commandTimeout)
 	defer cancel()
 
-	var commands [][]string
-	args := flag.CommandLine.Args()
-	if singleCmd {
-		if len(args) > 0 {
-			commands = append(commands, args)
-		}
-	} else {
-		for _, arg := range args {
-			commands = append(commands, mustSplitCmd(arg))
-		}
-	}
-
+	commands := prepareCommands(flag.CommandLine.Args())
 	for _, command := range commands {
 		cmd := createCmd(ctx, command, os.Stdout, os.Stderr)
 		err := cmd.Run()
