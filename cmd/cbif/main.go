@@ -7,11 +7,14 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"time"
 
+	"github.com/google/shlex"
 	"github.com/m-lab/go/flagx"
 	"github.com/m-lab/go/logx"
 	"github.com/m-lab/go/rtx"
+	"gopkg.in/m-lab/pipe.v3"
 )
 
 /*
@@ -41,8 +44,14 @@ PR builds:
 var (
 	ignoreErrors   bool
 	commandTimeout time.Duration
-	projects       flagx.StringArray
-	branches       flagx.StringArray
+	singleCmd      bool
+	workspace      string
+	workspaceLink  string
+	gitOriginURL   string
+	commitSha      string
+
+	projects flagx.StringArray
+	branches flagx.StringArray
 )
 
 func init() {
@@ -50,10 +59,17 @@ func init() {
 }
 
 func setupFlags() {
+	flag.BoolVar(&singleCmd, "single-command", false, "Run each argument as an individual command.")
 	flag.BoolVar(&ignoreErrors, "ignore-errors", false, "Ignore non-zero exit codes when executing commands.")
 	flag.DurationVar(&commandTimeout, "command-timeout", time.Hour, "Individual time out for each command to complete.")
+
 	flag.Var(&projects, "project-in", "Run if the current project is one of the conditional projects.")
 	flag.Var(&branches, "branch-in", "Run if the current branch is one of the conditional branches.")
+
+	flag.StringVar(&workspaceLink, "workspace-link", "", "Absolute path to link to the /workspace directory and set PWD to linked directory")
+	flag.StringVar(&gitOriginURL, "git-origin-url", "", "Git origin URL suitable for cloning")
+	flag.StringVar(&commitSha, "commit-sha", "", "Commit SHA of the git commit for the current build.")
+	flag.StringVar(&workspace, "workspace", "/workspace", "Source workspace directory to link into $GOPATH/src/$PROJECT_ROOT")
 }
 
 func createCmd(ctx context.Context, args []string, sout, serr *os.File) *exec.Cmd {
@@ -62,6 +78,12 @@ func createCmd(ctx context.Context, args []string, sout, serr *os.File) *exec.Cm
 	cmd.Stdout = sout
 	cmd.Stderr = serr
 	return cmd
+}
+
+func mustSplitCmd(command string) []string {
+	args, err := shlex.Split(command)
+	rtx.Must(err, "Failed to split command: %q", command)
+	return args
 }
 
 var osExit = os.Exit
@@ -127,22 +149,79 @@ func assignedFlags(fs *flag.FlagSet) foundFlags {
 	return assigned
 }
 
+func shouldSetupGit(flags foundFlags) bool {
+	_, gitErr := os.Stat(".git")
+	return gitErr != nil && (flags.Assigned("GIT_ORIGIN_URL") && flags.Assigned("COMMIT_SHA"))
+}
+
+var pipeCombinedOutput = pipe.CombinedOutput
+
+func createGit(originURL, sha string) error {
+	b, err := pipeCombinedOutput(
+		pipe.Script("# Creating .git from "+originURL,
+			pipe.Exec("git", "init"),
+			pipe.Exec("git", "remote", "add", "origin", originURL),
+			pipe.Exec("git", "fetch", "--depth=1", "origin", sha),
+			pipe.Exec("git", "reset", "--hard", "FETCH_HEAD"),
+		),
+	)
+	fmt.Println(string(b))
+	return err
+}
+
+func mustLinkWorkspace(absProjPath string) string {
+	// Setup symlink.
+	rtx.Must(os.MkdirAll(path.Dir(absProjPath), 0777), "Failed to make dirs: %q", path.Dir(absProjPath))
+	os.Remove(absProjPath) // Remove last element of absProjPath if present. Ignore error if not.
+	rtx.Must(os.Symlink(workspace, absProjPath), "Failed to create symlink: %q -> %q", absProjPath, workspace)
+	log.Printf("SUCCESS! Created symlink: ln -s %q %q", workspace, absProjPath)
+	rtx.Must(os.Chdir(absProjPath), "Failed to change dir to linked path: %q", absProjPath)
+	return absProjPath
+}
+
 func main() {
 	flag.Parse()
 	rtx.Must(flagx.ArgsFromEnv(flag.CommandLine), "Failed to parse flags")
 
-	reason, run := shouldRun(assignedFlags(flag.CommandLine))
+	flags := assignedFlags(flag.CommandLine)
+	reason, run := shouldRun(flags)
 	log.Println(reason)
 	if !run {
 		osExit(0)
 	}
 
+	if shouldSetupGit(flags) {
+		// Setup the .git repo if it's missing and we have the necessary info.
+		rtx.Must(createGit(gitOriginURL, commitSha), "Failed to create .git directory")
+	}
+
+	if flags.Assigned("WORKSPACE_LINK") {
+		// The process cwd maintained by the Linux kernel is the real, physical
+		// path. We want processes to execute with a cwd within the symbolically
+		// linked directory. Most shells manage PWD / OLDPWD in environment
+		// variables independent of the kernel and libc. The Go os.Getwd() follows
+		// this convention, by returning PWD if found, or using Getwd syscall
+		// otherwise. By setting PWD, we allow processes that use this convention to
+		// use the symlinked directory as the current working directory.
+		rtx.Must(os.Setenv("PWD", mustLinkWorkspace(workspaceLink)), "Failed to set PWD")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), commandTimeout)
 	defer cancel()
 
+	var commands [][]string
 	args := flag.CommandLine.Args()
-	if len(args) > 0 {
-		cmd := createCmd(ctx, args, os.Stdout, os.Stderr)
+	if singleCmd {
+		if len(args) > 0 {
+			commands = append(commands, args)
+		}
+	} else {
+		for _, arg := range args {
+			commands = append(commands, mustSplitCmd(arg))
+		}
+	}
+
+	for _, command := range commands {
+		cmd := createCmd(ctx, command, os.Stdout, os.Stderr)
 		err := cmd.Run()
 		checkExit(err, cmd.ProcessState)
 	}
