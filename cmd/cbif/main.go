@@ -62,7 +62,7 @@ func setupFlags() {
 }
 
 func createCmd(ctx context.Context, args []string, sout, serr *os.File) *exec.Cmd {
-	log.Println("run:", args)
+	log.Println("Command:", args)
 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 	cmd.Stdout = sout
 	cmd.Stderr = serr
