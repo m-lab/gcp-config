@@ -1,3 +1,16 @@
+// Copyright © 2019 gcp-config Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 package main
 
 import (
@@ -16,30 +29,6 @@ import (
 	"github.com/m-lab/go/rtx"
 	"gopkg.in/m-lab/pipe.v3"
 )
-
-/*
-
-Variables avilable from CB.
-
-All builds:
-  $PROJECT_ID    - build.ProjectId
-  $BUILD_ID      - build.BuildId
-
-Triggered builds:
-  $REPO_NAME     - build.Source.RepoSource.RepoName
-  $BRANCH_NAME   - build.Source.RepoSource.Revision.BranchName
-  $TAG_NAME      - build.Source.RepoSource.Revision.TagName
-  $COMMIT_SHA    - build.SourceProvenance.ResolvedRepoSource.Revision.CommitSha
-  $SHORT_SHA     - The first seven characters of COMMIT_SHA
-  $REVISION_ID   - $COMMIT_SHA
-
-PR builds:
-  _HEAD_BRANCH   - head branch of the pull request
-  _BASE_BRANCH   - base branch of the pull request
-  _HEAD_REPO_URL - url of the head repo of the pull request
-  _PR_NUMBER     - number of the pull request
-
-*/
 
 var (
 	ignoreErrors   bool
@@ -99,6 +88,14 @@ func checkExit(err error, ps *os.ProcessState) {
 	}
 }
 
+func continueOrExitZero(flags foundFlags) {
+	reason, run := shouldRun(flags)
+	log.Println(reason)
+	if !run {
+		osExit(0)
+	}
+}
+
 func shouldRun(flags foundFlags) (string, bool) {
 	project := os.Getenv("PROJECT_ID")
 	if flags.Assigned("PROJECT_IN") && !projects.Contains(project) {
@@ -149,7 +146,7 @@ func assignedFlags(fs *flag.FlagSet) foundFlags {
 	return assigned
 }
 
-func setupGit(flags foundFlags) {
+func trySetupGit(flags foundFlags) {
 	_, gitErr := os.Stat(".git")
 	if gitErr != nil && (flags.Assigned("GIT_ORIGIN_URL") && flags.Assigned("COMMIT_SHA")) {
 		// Setup the .git repo if it's missing and we have the necessary info.
@@ -157,7 +154,7 @@ func setupGit(flags foundFlags) {
 	}
 }
 
-func setupWorkspaceLink(flags foundFlags) {
+func trySetupWorkspaceLink(flags foundFlags) {
 	if flags.Assigned("WORKSPACE_LINK") {
 		// The process cwd maintained by the Linux kernel is the real, physical
 		// path. We want processes to execute with a cwd within the symbolically
@@ -214,14 +211,9 @@ func main() {
 	rtx.Must(flagx.ArgsFromEnv(flag.CommandLine), "Failed to parse flags")
 
 	flags := assignedFlags(flag.CommandLine)
-	reason, run := shouldRun(flags)
-	log.Println(reason)
-	if !run {
-		osExit(0)
-	}
-
-	setupGit(flags)
-	setupWorkspaceLink(flags)
+	continueOrExitZero(flags)
+	trySetupGit(flags)
+	trySetupWorkspaceLink(flags)
 
 	ctx, cancel := context.WithTimeout(context.Background(), commandTimeout)
 	defer cancel()
