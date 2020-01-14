@@ -4,9 +4,9 @@ Configs and tools for managing GCP configuration for M-Lab.
 
 ## CBIF
 
-CBIF adds conditional actions to Cloud Build configs ([design][design]).
+CBIF adds conditional actions to Cloud Build configs (See [cmd/cbif/DESIGN.md][design]).
 
-[design]: CBIF-DESIGN.md
+[design]: cmd/cbif/DESIGN.md
 
 ## STCTL
 
