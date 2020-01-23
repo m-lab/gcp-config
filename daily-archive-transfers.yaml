@@ -23,6 +23,7 @@ steps:
              '-include=host',
              '-include=neubot',
              '-include=utilization',
+             '-include=wehe',
              'sync'
   ]
 
