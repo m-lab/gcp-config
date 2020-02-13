@@ -14,6 +14,9 @@
 # * remove data from old locations (slower)
 
 
+set -e
+set -x
+
 archive=${1:?Please provide GCS bucket name, e.g. archive-mlab-sandbox}
 
 # NOTE: This will take a very long time, first "rsync" == "cp".
