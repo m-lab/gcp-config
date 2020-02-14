@@ -45,11 +45,11 @@ function safe_rsync() {
   local dst=$2
 
   # List all files in the src, to compare to all files in dst at the end.
-  gsutil ls $src > src.raw
+  time gsutil ls $src > src.raw
   # Perform copy.
-  gsutil -m rsync -r $src $dst
+  time gsutil -m rsync -r $src $dst
   # List all files in the dst (which should include src files now).
-  gsutil ls $dst > dst.raw
+  time gsutil ls $dst > dst.raw
   # Assert that the src files are found in the dst files.
   assert_src_files_found_in_dst src.raw dst.raw
 }
@@ -101,28 +101,28 @@ exit 0
 
 # NDT web100
 for year in 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 ; do
-  gsutil -m rm -r gs://${archive}/ndt/${year}/
+  time gsutil -m rm -r gs://${archive}/ndt/${year}/
 done
 
 # Sidestream web100
 for year in 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 ; do
-  gsutil -m rm -r gs://${archive}/sidestream/${year}/
+  time gsutil -m rm -r gs://${archive}/sidestream/${year}/
 done
 
 # Paris-traceroute
 for year in 2013 2014 2015 2016 2017 2018 2019 ; do
-  gsutil -m rm -r gs://${archive}/paris-traceroute/${year}/
+  time gsutil -m rm -r gs://${archive}/paris-traceroute/${year}/
 done
 
 # Switch
 for year in 2016 2017 2018 2019 ; do
-  gsutil -m rm -r gs://${archive}/switch/${year}/
+  time gsutil -m rm -r gs://${archive}/switch/${year}/
 done
 
 # TODO: wait until ndt-server creates the single ndt7 directory name.
 # i.e. https://github.com/m-lab/ndt-server/pull/264 is in production.
 for year in 2019 2020 ; do
   # NDT7 Upload / Download
-  gsutil -m rm -r gs://${archive}/ndt/ndt7/upload/${year}/
-  gsutil -m rm -r gs://${archive}/ndt/ndt7/download/${year}/
+  time gsutil -m rm -r gs://${archive}/ndt/ndt7/upload/${year}/
+  time gsutil -m rm -r gs://${archive}/ndt/ndt7/download/${year}/
 done
