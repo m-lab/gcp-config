@@ -19,35 +19,73 @@ set -x
 
 archive=${1:?Please provide GCS bucket name, e.g. archive-mlab-sandbox}
 
-# NOTE: This will take a very long time, first "rsync" == "cp".
-# NOTE: The old directories should be removed after the rsync completes.
+function assert_src_files_found_in_dst() {
+  local src=$1
+  local dst=$2
+
+  # We cannot compare the files directly b/c the object paths have changed.
+  # Extract just the archive name from the last path component.
+  awk -F/ '{print $NF}' $src | sort > src.files
+  awk -F/ '{print $NF}' $dst | sort > dst.files
+
+  # Report files that are unique to the src. There should be zero.
+  c=`comm -2 -3 src.files dst.files | wc -l`
+  if [[ $c != "0" ]]; then
+    echo "FAILURE:"
+    comm -2 -3 src.files dst.files
+    return 1
+  else
+    echo "SUCCESS: all files from $src found in $dst"
+    return 0
+  fi
+}
+
+function safe_rsync() {
+  local src=$1
+  local dst=$2
+
+  # List all files in the src, to compare to all files in dst at the end.
+  gsutil ls $src > src.raw
+  # Perform copy.
+  gsutil -m rsync -r $src $dst
+  # List all files in the dst (which should include src files now).
+  gsutil ls $dst > dst.raw
+  # Assert that the src files are found in the dst files.
+  assert_src_files_found_in_dst src.raw dst.raw
+}
+
+# NOTE: This will take a very long time. Each "safe_rsync" performs several steps:
+# * list files in src
+# * run rsync
+# * list files in dst
+# * verify that src files are found in dst.
 
 # NDT web100
 for year in 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 ; do
-  gsutil -m rsync -r gs://${archive}/ndt/${year}/ gs://${archive}/ndt/web100/${year}/
+  safe_rsync gs://${archive}/ndt/${year}/ gs://${archive}/ndt/web100/${year}/
 done
 
 # Sidestream web100
 for year in 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 ; do
-  gsutil -m rsync -r gs://${archive}/sidestream/${year}/ gs://${archive}/vserver/sidestream/${year}/
+  safe_rsync gs://${archive}/sidestream/${year}/ gs://${archive}/vserver/sidestream/${year}/
 done
 
 # Paris-traceroute
 for year in 2013 2014 2015 2016 2017 2018 2019 ; do
-  gsutil -m rsync -r gs://${archive}/paris-traceroute/${year}/ gs://${archive}/vserver/traceroute/${year}/
+  safe_rsync gs://${archive}/paris-traceroute/${year}/ gs://${archive}/vserver/traceroute/${year}/
 done
 
 # Switch
 for year in 2016 2017 2018 2019 ; do
-  gsutil -m rsync -r gs://${archive}/switch/${year}/ gs://${archive}/utilization/switch/${year}/
+  safe_rsync gs://${archive}/switch/${year}/ gs://${archive}/utilization/switch/${year}/
 done
 
 # TODO: wait until ndt-server creates the single ndt7 directory name.
 # i.e. https://github.com/m-lab/ndt-server/pull/264 is in production.
 for year in 2019 2020 ; do
   # NDT7 Upload / Download
-  gsutil -m rsync -r gs://${archive}/ndt/ndt7/upload/${year}/ gs://${archive}/ndt/ndt7/${year}/
-  gsutil -m rsync -r gs://${archive}/ndt/ndt7/download/${year}/ gs://${archive}/ndt/ndt7/${year}/
+  safe_rsync gs://${archive}/ndt/ndt7/upload/${year}/ gs://${archive}/ndt/ndt7/${year}/
+  safe_rsync gs://${archive}/ndt/ndt7/download/${year}/ gs://${archive}/ndt/ndt7/${year}/
 done
 
 # Delete exits to proceed to remove legacy folders.
