@@ -45,11 +45,11 @@ function safe_rsync() {
   local dst=$2
 
   # List all files in the src, to compare to all files in dst at the end.
-  time gsutil ls $src > src.raw
+  time gsutil ls -r $src > src.raw
   # Perform copy.
   time gsutil -m rsync -r $src $dst
   # List all files in the dst (which should include src files now).
-  time gsutil ls $dst > dst.raw
+  time gsutil ls -r $dst > dst.raw
   # Assert that the src files are found in the dst files.
   assert_src_files_found_in_dst src.raw dst.raw
 }
