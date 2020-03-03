@@ -70,11 +70,6 @@ for year in 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 ; do
   safe_rsync gs://${archive}/sidestream/${year}/ gs://${archive}/host/sidestream/${year}/
 done
 
-# Paris-traceroute
-for year in 2013 2014 2015 2016 2017 2018 2019 ; do
-  safe_rsync gs://${archive}/paris-traceroute/${year}/ gs://${archive}/host/traceroute/${year}/
-done
-
 # Switch
 for year in 2016 2017 2018 2019 ; do
   safe_rsync gs://${archive}/switch/${year}/ gs://${archive}/utilization/switch/${year}/
@@ -107,11 +102,6 @@ done
 # Sidestream web100
 for year in 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 ; do
   time gsutil -m rm -r gs://${archive}/sidestream/${year}/
-done
-
-# Paris-traceroute
-for year in 2013 2014 2015 2016 2017 2018 2019 ; do
-  time gsutil -m rm -r gs://${archive}/paris-traceroute/${year}/
 done
 
 # Switch
