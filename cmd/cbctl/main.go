@@ -137,7 +137,7 @@ func main() {
 	switch op {
 	case "list":
 		log.Println("Listing build triggers")
-		err := cmd.List(ctx, func(tr *cloudbuild.ListBuildTriggersResponse) error {
+		err := cmd.List(ctx, project, func(tr *cloudbuild.ListBuildTriggersResponse) error {
 			for _, t := range tr.Triggers {
 				pretty.Print(t)
 			}
