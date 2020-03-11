@@ -1,0 +1,22 @@
+############################################################################
+# Create project-specific customized builder images.
+############################################################################
+
+steps:
+# Build cbif, stand alone container. Useful for import by other repos.
+- name: gcr.io/cloud-builders/docker
+  args: [
+    'build', '--tag=gcr.io/$PROJECT_ID/cbif', '.'
+  ]
+
+# Build image combining: gcloud, jsonnet, and cbif.
+- name: gcr.io/cloud-builders/docker
+  args: [
+    'build',
+    '--tag=gcr.io/$PROJECT_ID/gcloud-jsonnet-cbif',
+    '--file=Dockerfile.jsonnet', '.'
+  ]
+
+images:
+- 'gcr.io/$PROJECT_ID/cbif'
+- 'gcr.io/$PROJECT_ID/gcloud-jsonnet-cbif'
