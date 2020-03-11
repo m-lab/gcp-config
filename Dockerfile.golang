@@ -1,0 +1,5 @@
+FROM golang:1.13
+ADD . /go/src/github.com/m-lab/gcp-config
+RUN apt-get update && apt-get install -y git
+RUN go get -v github.com/m-lab/gcp-config/cmd/cbif
+ENTRYPOINT ["/go/bin/cbif"]
