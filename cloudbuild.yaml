@@ -1,0 +1,23 @@
+############################################################################
+# Create project-specific customized builder images.
+############################################################################
+
+steps:
+# Build golang-cbif container. Useful golang builds and tests.
+- name: gcr.io/cloud-builders/docker
+  args: [
+    'build', '--tag=gcr.io/$PROJECT_ID/golang-cbif',
+    '--file=Dockerfile.golang', '.'
+  ]
+
+# Build gcloud-jsonnet-cbif image combining: gcloud, jsonnet, and cbif.
+- name: gcr.io/cloud-builders/docker
+  args: [
+    'build',
+    '--tag=gcr.io/$PROJECT_ID/gcloud-jsonnet-cbif',
+    '--file=Dockerfile.jsonnet', '.'
+  ]
+
+images:
+- 'gcr.io/$PROJECT_ID/golang-cbif'
+- 'gcr.io/$PROJECT_ID/gcloud-jsonnet-cbif'
