@@ -3,13 +3,14 @@
 ############################################################################
 
 steps:
-# Build cbif, stand alone container. Useful for import by other repos.
+# Build golang-cbif container. Useful golang builds and tests.
 - name: gcr.io/cloud-builders/docker
   args: [
-    'build', '--tag=gcr.io/$PROJECT_ID/cbif', '.'
+    'build', '--tag=gcr.io/$PROJECT_ID/golang-cbif',
+    '--file=Dockerfile.golang', '.'
   ]
 
-# Build image combining: gcloud, jsonnet, and cbif.
+# Build gcloud-jsonnet-cbif image combining: gcloud, jsonnet, and cbif.
 - name: gcr.io/cloud-builders/docker
   args: [
     'build',
@@ -18,5 +19,5 @@ steps:
   ]
 
 images:
-- 'gcr.io/$PROJECT_ID/cbif'
+- 'gcr.io/$PROJECT_ID/golang-cbif'
 - 'gcr.io/$PROJECT_ID/gcloud-jsonnet-cbif'
