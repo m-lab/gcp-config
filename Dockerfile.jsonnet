@@ -29,7 +29,7 @@ COPY --from=cbif-go-builder  /go/bin/cbif /usr/bin/cbif
 COPY --from=jsonnet-go-builder  /go/bin/jsonnet /usr/bin/jsonnet-go
 COPY --from=jsonnet-cpp-builder /opt/jsonnet/jsonnet /usr/bin
 COPY --from=jsonnet-cpp-builder /opt/jsonnet/jsonnetfmt /usr/bin
-RUN curl -o /usr/bin/sjsonnet.jar https://github.com/lihaoyi/sjsonnet/releases/download/0.2.3/sjsonnet.jar
+RUN curl --location -o /usr/bin/sjsonnet.jar https://github.com/databricks/sjsonnet/releases/download/0.2.3/sjsonnet.jar
 RUN chmod 755 /usr/bin/sjsonnet.jar
 
 # Install additional dependencies.
