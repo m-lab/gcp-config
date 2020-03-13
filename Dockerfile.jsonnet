@@ -34,7 +34,7 @@ RUN chmod 755 /usr/bin/sjsonnet.jar
 
 # Install additional dependencies.
 RUN apt-get update
-RUN apt-get install -y dnsutils ca-certificates default-jre-headless make
+RUN apt-get install -y dnsutils ca-certificates default-jre-headless make jq
 RUN update-ca-certificates
 
 WORKDIR /
