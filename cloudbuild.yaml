@@ -18,6 +18,14 @@ steps:
     '--file=Dockerfile.jsonnet', '.'
   ]
 
+# Build epoxy-images image
+- name: gcr.io/cloud-builders/docker
+  args: [
+    'build',
+    '--tag=gcr.io/$PROJECT_ID/epoxy-images',
+    '--file=Dockerfile.epoxy-images', '.'
+  ]
+
 images:
 - 'gcr.io/$PROJECT_ID/golang-cbif'
 - 'gcr.io/$PROJECT_ID/gcloud-jsonnet-cbif'
