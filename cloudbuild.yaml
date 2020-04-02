@@ -29,3 +29,4 @@ steps:
 images:
 - 'gcr.io/$PROJECT_ID/golang-cbif'
 - 'gcr.io/$PROJECT_ID/gcloud-jsonnet-cbif'
+- 'gcr.io/$PROJECT_ID/epoxy-images'
