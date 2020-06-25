@@ -1,0 +1,19 @@
+description: ' This role provides Discuss group users with access to specific datasets
+  in the measurement-lab project. The role is applied to individual BQ datasets within
+  BQ, by selecting the dataset and clicking "Share Dataset".'
+etag: BwWo6W3Gips=
+includedPermissions:
+- bigquery.datasets.get
+- bigquery.datasets.getIamPolicy
+- bigquery.jobs.create
+- bigquery.jobs.list
+- bigquery.savedqueries.get
+- bigquery.savedqueries.list
+- bigquery.tables.export
+- bigquery.tables.get
+- bigquery.tables.getData
+- bigquery.tables.list
+- resourcemanager.projects.get
+name: projects/measurement-lab/roles/public_bigquery_user_dataset_level
+stage: GA
+title: public-bigquery-user-dataset-level

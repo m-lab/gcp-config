@@ -1,0 +1,18 @@
+description: |-
+  Created to provide limited access to project resources for public bq users. Combined with a table level role this allows bq users subscribed to Discuss to:
+  - select measurement-lab project
+  - created jobs with the SDK
+  - save personal queries
+  - export data
+etag: BwWo6ZLG8WE=
+includedPermissions:
+- bigquery.jobs.create
+- bigquery.jobs.list
+- bigquery.savedqueries.get
+- bigquery.savedqueries.list
+- bigquery.tables.export
+- bigquery.tables.getData
+- resourcemanager.projects.get
+name: projects/measurement-lab/roles/public_bigquery_user_project_level
+stage: GA
+title: public-bigquery-user-project-level
