@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/m-lab/go/flagx"
 	"github.com/m-lab/go/logx"
 	"github.com/m-lab/go/pretty"
 
@@ -14,7 +15,7 @@ import (
 // Create creates a new storage transfer job.
 func (c *Command) Create(ctx context.Context) (*storagetransfer.TransferJob, error) {
 	spec := getSpec(c.SourceBucket, c.TargetBucket, c.Prefixes)
-	desc := getDesc(c.SourceBucket, c.TargetBucket)
+	desc := getDesc(c.SourceBucket, c.TargetBucket, c.StartTime)
 	ts := time.Now().UTC()
 	create := &storagetransfer.TransferJob{
 		Description: desc,
@@ -45,8 +46,8 @@ func (c *Command) Create(ctx context.Context) (*storagetransfer.TransferJob, err
 
 // getDesc returns the canonical description used to identify previously created
 // jobs. WARNING: Do not modify this format without adjusting existing configs to match.
-func getDesc(src, dest string) string {
-	return fmt.Sprintf("STCTL: daily copy of %s to %s", src, dest)
+func getDesc(src, dest string, start flagx.Time) string {
+	return fmt.Sprintf("STCTL: transfer %s -> %s at %s", src, dest, start)
 }
 
 func getSpec(src, dest string, prefixes []string) *storagetransfer.TransferSpec {

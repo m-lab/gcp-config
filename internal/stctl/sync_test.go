@@ -35,7 +35,7 @@ func TestCommand_Sync(t *testing.T) {
 							},
 							{
 								Name:        "transferOperations/description-matches-gcs-buckets",
-								Description: getDesc("fake-source", "fake-target"),
+								Description: getDesc("fake-source", "fake-target", flagx.Time{Hour: 1, Minute: 2, Second: 3}),
 								Schedule: &storagetransfer.Schedule{
 									ScheduleEndDate: nil,
 									StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
@@ -82,7 +82,7 @@ func TestCommand_Sync(t *testing.T) {
 						TransferJobs: []*storagetransfer.TransferJob{
 							{
 								Name:        "transferOperations/description-matches-ObjectConditions-does-not",
-								Description: getDesc("fake-source", "fake-target"),
+								Description: getDesc("fake-source", "fake-target", flagx.Time{Hour: 1, Minute: 2, Second: 3}),
 								Schedule: &storagetransfer.Schedule{
 									ScheduleEndDate: nil,
 									StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
@@ -170,7 +170,7 @@ func TestCommand_Sync(t *testing.T) {
 						TransferJobs: []*storagetransfer.TransferJob{
 							{
 								Name:        "transferOperations/description-matches",
-								Description: getDesc("fake-source", "fake-target"),
+								Description: getDesc("fake-source", "fake-target", flagx.Time{Hour: 1, Minute: 2, Second: 3}),
 								Schedule: &storagetransfer.Schedule{
 									ScheduleEndDate: nil,
 									StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
@@ -200,7 +200,7 @@ func TestCommand_Sync(t *testing.T) {
 						TransferJobs: []*storagetransfer.TransferJob{
 							{
 								Name:        "transferOperations/description-matches",
-								Description: getDesc("fake-source", "fake-target"),
+								Description: getDesc("fake-source", "fake-target", flagx.Time{Hour: 1, Minute: 2, Second: 3}),
 								Schedule: &storagetransfer.Schedule{
 									ScheduleEndDate: nil,
 									StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
