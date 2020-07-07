@@ -27,14 +27,18 @@ steps:
              'sync'
   ]
 
-# 03:30:00 Configure daily local archive to public archive transfer.
+# 04:00:00 Configure daily local archive to public archive transfer.
+# NOTE that this transfer is only 1.5 hours after the previous transfer.
+# The other transfers are staggered by 3 hours, and we should consider
+# making this one 3 hours as well, but that would increase the latency
+# before the data is available for parsing.
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=measurement-lab
   args: [
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
-             '-time=03:30:00',
+             '-time=04:00:00',
              'sync'
   ]
 
@@ -57,14 +61,14 @@ steps:
              'sync'
   ]
 
-# 09:30:00 Configure daily local archive to public archive transfer.
+# 11:30:00 Configure daily local archive to public archive transfer.
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=measurement-lab
   args: [
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
-             '-time=09:30:00',
+             '-time=11:30:00',
              'sync'
   ]
 
@@ -85,14 +89,14 @@ steps:
              'sync'
   ]
 
-# 15:30:00 Configure daily local archive to public archive transfer.
+# 17:30:00 Configure daily local archive to public archive transfer.
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=measurement-lab
   args: [
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
-             '-time=15:30:00',
+             '-time=17:30:00',
              'sync'
   ]
 
@@ -113,14 +117,14 @@ steps:
              'sync'
   ]
 
-# 21:30:00 Configure daily local archive to public archive transfer.
+# 23:30:00 Configure daily local archive to public archive transfer.
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=measurement-lab
   args: [
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
-             '-time=21:30:00',
+             '-time=23:30:00',
              'sync'
   ]
 
