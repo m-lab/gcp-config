@@ -46,7 +46,7 @@ steps:
 # has less data to move, and can complete more quickly.
 
 # 08:30:00 Configure daily pusher to local archive transfer.
-- name: gcp-config-cbif
+- name: gcp-config-cbif-0830
   env:
   - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
   args: [
@@ -62,7 +62,7 @@ steps:
   ]
 
 # 11:30:00 Configure daily local archive to public archive transfer.
-- name: gcp-config-cbif
+- name: gcp-config-cbif-1130
   env:
   - PROJECT_IN=measurement-lab
   args: [
@@ -74,7 +74,7 @@ steps:
 
 
 # 14:30:00 Configure daily pusher to local archive transfer.
-- name: gcp-config-cbif
+- name: gcp-config-cbif-1430
   env:
   - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
   args: [
@@ -90,7 +90,7 @@ steps:
   ]
 
 # 17:30:00 Configure daily local archive to public archive transfer.
-- name: gcp-config-cbif
+- name: gcp-config-cbif-1730
   env:
   - PROJECT_IN=measurement-lab
   args: [
@@ -102,7 +102,7 @@ steps:
 
 
 # 20:30:00 Configure daily pusher to local archive transfer.
-- name: gcp-config-cbif
+- name: gcp-config-cbif-2030
   env:
   - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
   args: [
@@ -118,7 +118,7 @@ steps:
   ]
 
 # 23:30:00 Configure daily local archive to public archive transfer.
-- name: gcp-config-cbif
+- name: gcp-config-cbif-2330
   env:
   - PROJECT_IN=measurement-lab
   args: [
