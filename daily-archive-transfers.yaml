@@ -78,7 +78,8 @@ steps:
 
 
 # 14:30:00 Configure daily pusher to local archive transfer.
-# This one has no maxFileAge, so it should handle any stragglers
+# For this one, maxFileAge is set to 7 days, to catch stragglers.
+# This likely means the calculating phase will take much longer.
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
@@ -86,6 +87,7 @@ steps:
     'stctl', '-gcs.source=pusher-$PROJECT_ID',
              '-gcs.target=archive-$PROJECT_ID',
              '-time=14:30:00',
+             '-maxFileAge=7d',
              '-include=ndt',
              '-include=host',
              '-include=neubot',
@@ -95,7 +97,8 @@ steps:
   ]
 
 # 17:30:00 Configure daily local archive to public archive transfer.
-# This one has no maxFileAge, so it should handle any stragglers
+# For this one, maxFileAge is set to 8 days, to catch stragglers.
+# This likely means the calculating phase will take much longer.
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=measurement-lab
@@ -103,6 +106,7 @@ steps:
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
              '-time=17:30:00',
+             '-maxFileAge=8d',
              'sync'
   ]
 
