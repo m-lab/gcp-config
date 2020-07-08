@@ -19,6 +19,7 @@ steps:
     'stctl', '-gcs.source=pusher-$PROJECT_ID',
              '-gcs.target=archive-$PROJECT_ID',
              '-time=02:30:00',
+             '-maxFileAge=12h',
              '-include=ndt',
              '-include=host',
              '-include=neubot',
@@ -39,6 +40,7 @@ steps:
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
              '-time=04:00:00',
+             '-maxFileAge=12h',
              'sync'
   ]
 
@@ -53,6 +55,7 @@ steps:
     'stctl', '-gcs.source=pusher-$PROJECT_ID',
              '-gcs.target=archive-$PROJECT_ID',
              '-time=08:30:00',
+             '-maxFileAge=12h',
              '-include=ndt',
              '-include=host',
              '-include=neubot',
@@ -69,11 +72,13 @@ steps:
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
              '-time=11:30:00',
+             '-maxFileAge=12h',
              'sync'
   ]
 
 
 # 14:30:00 Configure daily pusher to local archive transfer.
+# This one has no maxFileAge, so it should handle any stragglers
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
@@ -90,6 +95,7 @@ steps:
   ]
 
 # 17:30:00 Configure daily local archive to public archive transfer.
+# This one has no maxFileAge, so it should handle any stragglers
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=measurement-lab
@@ -109,6 +115,7 @@ steps:
     'stctl', '-gcs.source=pusher-$PROJECT_ID',
              '-gcs.target=archive-$PROJECT_ID',
              '-time=20:30:00',
+             '-maxFileAge=12h',
              '-include=ndt',
              '-include=host',
              '-include=neubot',
@@ -125,6 +132,7 @@ steps:
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
              '-time=23:30:00',
+             '-maxFileAge=12h',
              'sync'
   ]
 
