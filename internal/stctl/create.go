@@ -14,7 +14,7 @@ import (
 
 // Create creates a new storage transfer job.
 func (c *Command) Create(ctx context.Context) (*storagetransfer.TransferJob, error) {
-	spec := getSpec(c.SourceBucket, c.TargetBucket, c.Prefixes)
+	spec := getSpec(c.SourceBucket, c.TargetBucket, c.Prefixes, c.MinFileAge, c.MaxFileAge)
 	desc := getDesc(c.SourceBucket, c.TargetBucket, c.StartTime)
 	ts := time.Now().UTC()
 	create := &storagetransfer.TransferJob{
@@ -50,7 +50,7 @@ func getDesc(src, dest string, start flagx.Time) string {
 	return fmt.Sprintf("STCTL: transfer %s -> %s at %s", src, dest, start)
 }
 
-func getSpec(src, dest string, prefixes []string) *storagetransfer.TransferSpec {
+func getSpec(src, dest string, prefixes []string, minAge, maxAge time.Duration) *storagetransfer.TransferSpec {
 	spec := &storagetransfer.TransferSpec{
 		GcsDataSource: &storagetransfer.GcsData{
 			BucketName: src,
@@ -59,12 +59,19 @@ func getSpec(src, dest string, prefixes []string) *storagetransfer.TransferSpec 
 			BucketName: dest,
 		},
 	}
+
+	cond := &storagetransfer.ObjectConditions{}
 	if prefixes != nil {
-		spec.ObjectConditions = &storagetransfer.ObjectConditions{
-			IncludePrefixes: prefixes,
-			// Only files modified in the last 5 days.
-			MaxTimeElapsedSinceLastModification: "432000s",
-		}
+		cond.IncludePrefixes = prefixes
+		spec.ObjectConditions = cond
+	}
+	if maxAge > 0 {
+		cond.MaxTimeElapsedSinceLastModification = fmt.Sprintf("%ds", maxAge/1000000000)
+		spec.ObjectConditions = cond
+	}
+	if minAge > 0 {
+		cond.MinTimeElapsedSinceLastModification = fmt.Sprintf("%ds", minAge/1000000000)
+		spec.ObjectConditions = cond
 	}
 	return spec
 }

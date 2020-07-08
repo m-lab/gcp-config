@@ -56,6 +56,7 @@ func TestCommand_Sync(t *testing.T) {
 				TargetBucket: "fake-target",
 				Prefixes:     []string{"a", "b"},
 				StartTime:    flagx.Time{Hour: 1, Minute: 2, Second: 3},
+				MaxFileAge:   5 * 24 * time.Hour,
 			},
 			expected: &storagetransfer.TransferJob{
 				Description: "STCTL: transfer fake-source -> fake-target at 01:02:03",
@@ -118,8 +119,7 @@ func TestCommand_Sync(t *testing.T) {
 					GcsDataSource: &storagetransfer.GcsData{BucketName: "fake-source"},
 					GcsDataSink:   &storagetransfer.GcsData{BucketName: "fake-target"},
 					ObjectConditions: &storagetransfer.ObjectConditions{
-						IncludePrefixes:                     []string{"a", "b"},
-						MaxTimeElapsedSinceLastModification: "432000s",
+						IncludePrefixes: []string{"a", "b"},
 					},
 				},
 				Status: "ENABLED",
@@ -224,15 +224,15 @@ func TestCommand_Sync(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for i, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
 			job, err := tt.c.Sync(ctx)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Command.Sync() %d error = %v, wantErr %v", i, err, tt.wantErr)
+				t.Errorf("Command.Sync() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if diff := deep.Equal(job, tt.expected); diff != nil && !tt.wantErr {
-				t.Errorf("Command.Sync() %d job did not match expected;\n%s", i, strings.Join(diff, "\n"))
+				t.Errorf("Command.Sync() job did not match expected;\n%s", strings.Join(diff, "\n"))
 			}
 		})
 	}

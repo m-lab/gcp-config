@@ -49,6 +49,8 @@ type Command struct {
 	Prefixes     []string
 	StartTime    flagx.Time
 	AfterDate    time.Time
+	MinFileAge   time.Duration
+	MaxFileAge   time.Duration
 	Output       io.Writer
 }
 
