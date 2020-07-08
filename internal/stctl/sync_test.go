@@ -88,14 +88,14 @@ func TestCommand_Sync(t *testing.T) {
 							{
 								Name:        "transferOperations/description-matches-ObjectConditions-does-not",
 								Description: getDesc("fake-source", "fake-target", flagx.Time{Hour: 1, Minute: 2, Second: 3}),
-								Schedule: &storagetransfer.Schedule{
-									ScheduleEndDate: nil,
-									StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
+								Schedule:    &storagetransfer.Schedule{
+									// ScheduleEndDate: nil,
+									// StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
 								},
 								TransferSpec: &storagetransfer.TransferSpec{
-									GcsDataSource:    &storagetransfer.GcsData{BucketName: "fake-source"},
-									GcsDataSink:      &storagetransfer.GcsData{BucketName: "fake-target"},
-									ObjectConditions: &storagetransfer.ObjectConditions{}, // Empty object conditions specified.
+									// GcsDataSource:    &storagetransfer.GcsData{BucketName: "fake-source"},
+									// GcsDataSink:      &storagetransfer.GcsData{BucketName: "fake-target"},
+									// ObjectConditions: &storagetransfer.ObjectConditions{}, // Empty object conditions specified.
 								},
 							},
 						},
@@ -176,14 +176,14 @@ func TestCommand_Sync(t *testing.T) {
 							{
 								Name:        "transferOperations/description-matches",
 								Description: getDesc("fake-source", "fake-target", flagx.Time{Hour: 1, Minute: 2, Second: 3}),
-								Schedule: &storagetransfer.Schedule{
-									ScheduleEndDate: nil,
-									StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
+								Schedule:    &storagetransfer.Schedule{
+									// ScheduleEndDate: nil,
+									// StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
 								},
 								TransferSpec: &storagetransfer.TransferSpec{
-									GcsDataSource:    &storagetransfer.GcsData{BucketName: "fake-source"},
-									GcsDataSink:      &storagetransfer.GcsData{BucketName: "fake-target"},
-									ObjectConditions: &storagetransfer.ObjectConditions{IncludePrefixes: []string{"c", "d"}}, // IncludePrefixes do not match command.Prefixes.
+									// GcsDataSource:    &storagetransfer.GcsData{BucketName: "fake-source"},
+									// GcsDataSink:      &storagetransfer.GcsData{BucketName: "fake-target"},
+									// ObjectConditions: &storagetransfer.ObjectConditions{IncludePrefixes: []string{"c", "d"}}, // IncludePrefixes do not match command.Prefixes.
 								},
 							},
 						},
@@ -206,15 +206,15 @@ func TestCommand_Sync(t *testing.T) {
 							{
 								Name:        "transferOperations/description-matches",
 								Description: getDesc("fake-source", "fake-target", flagx.Time{Hour: 3, Minute: 2, Second: 1}),
-								Schedule: &storagetransfer.Schedule{
-									ScheduleEndDate: nil,
-									StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
-								},
-								TransferSpec: &storagetransfer.TransferSpec{
-									GcsDataSource:    &storagetransfer.GcsData{BucketName: "fake-source"},
-									GcsDataSink:      &storagetransfer.GcsData{BucketName: "fake-target"},
-									ObjectConditions: &storagetransfer.ObjectConditions{},
-								},
+								// Schedule:    &storagetransfer.Schedule{
+								// 	// ScheduleEndDate: nil,
+								// 	// StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
+								// },
+								// TransferSpec: &storagetransfer.TransferSpec{
+								// 	// GcsDataSource:    &storagetransfer.GcsData{BucketName: "fake-source"},
+								// 	// GcsDataSink:      &storagetransfer.GcsData{BucketName: "fake-target"},
+								// 	// ObjectConditions: &storagetransfer.ObjectConditions{},
+								// },
 							},
 						},
 					},
