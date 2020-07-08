@@ -66,11 +66,11 @@ func getSpec(src, dest string, prefixes []string, minAge, maxAge time.Duration) 
 		spec.ObjectConditions = cond
 	}
 	if maxAge > 0 {
-		cond.MaxTimeElapsedSinceLastModification = fmt.Sprintf("%ds", maxAge/1000000000)
+		cond.MaxTimeElapsedSinceLastModification = fmt.Sprintf("%.0fs", maxAge.Seconds())
 		spec.ObjectConditions = cond
 	}
 	if minAge > 0 {
-		cond.MinTimeElapsedSinceLastModification = fmt.Sprintf("%ds", minAge/1000000000)
+		cond.MinTimeElapsedSinceLastModification = fmt.Sprintf("%.0fs", minAge.Seconds())
 		spec.ObjectConditions = cond
 	}
 	return spec
