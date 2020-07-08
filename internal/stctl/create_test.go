@@ -14,7 +14,7 @@ import (
 func TestCommand_Create(t *testing.T) {
 	ts := time.Now().UTC()
 	expected := &storagetransfer.TransferJob{
-		Description: "STCTL: daily copy of src-bucket to dest-bucket",
+		Description: "STCTL: transfer src-bucket -> dest-bucket at 02:10:00",
 		Name:        "THIS-IS-A-FAKE-ASSIGNED-JOB-NAME",
 		ProjectId:   "fake-mlab-testing",
 		Schedule: &storagetransfer.Schedule{
@@ -38,7 +38,8 @@ func TestCommand_Create(t *testing.T) {
 				BucketName: "dest-bucket",
 			},
 			ObjectConditions: &storagetransfer.ObjectConditions{
-				IncludePrefixes: []string{"ndt"},
+				IncludePrefixes:                     []string{"ndt"},
+				MaxTimeElapsedSinceLastModification: "432000s",
 			},
 		},
 	}
