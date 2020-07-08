@@ -40,6 +40,7 @@ func TestCommand_Create(t *testing.T) {
 			ObjectConditions: &storagetransfer.ObjectConditions{
 				IncludePrefixes:                     []string{"ndt"},
 				MaxTimeElapsedSinceLastModification: "432000s",
+				MinTimeElapsedSinceLastModification: "3600s",
 			},
 		},
 	}
@@ -58,6 +59,7 @@ func TestCommand_Create(t *testing.T) {
 				SourceBucket: "src-bucket",
 				TargetBucket: "dest-bucket",
 				MaxFileAge:   5 * 24 * time.Hour,
+				MinFileAge:   time.Hour,
 				Project:      "fake-mlab-testing",
 			},
 		},
