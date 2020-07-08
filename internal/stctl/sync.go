@@ -35,8 +35,8 @@ func (c *Command) Sync(ctx context.Context) (*storagetransfer.TransferJob, error
 			}
 			logx.Debug.Print(pretty.Sprint(job))
 			if desc == job.Description {
-				// Sync depends on the convention for storage transfer job managment where
-				// only a single transfer job exists between two buckets. So, the first
+				// Sync depends on the convention for storage transfer job management that
+				// each job has a unique description, so the first
 				// matching job should be the only matching job.
 				found = job
 				return nil

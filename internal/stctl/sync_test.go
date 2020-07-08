@@ -29,9 +29,8 @@ func TestCommand_Sync(t *testing.T) {
 							{
 								Name:        "transferOperations/ignore-job-with-end-date",
 								Description: "ignore-job-with-end-date",
-								Schedule: &storagetransfer.Schedule{
-									ScheduleEndDate: &storagetransfer.Date{Day: 1, Month: 2, Year: 2019},
-								},
+								// Schedule can be empty because there is no TransferSpec?
+								Schedule: &storagetransfer.Schedule{},
 							},
 							{
 								Name:        "transferOperations/description-matches-gcs-buckets",
@@ -88,19 +87,13 @@ func TestCommand_Sync(t *testing.T) {
 							{
 								Name:        "transferOperations/description-matches-ObjectConditions-does-not",
 								Description: getDesc("fake-source", "fake-target", flagx.Time{Hour: 1, Minute: 2, Second: 3}),
-								Schedule: &storagetransfer.Schedule{
-									ScheduleEndDate: nil,
-									StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
-								},
-								TransferSpec: &storagetransfer.TransferSpec{
-									GcsDataSource:    &storagetransfer.GcsData{BucketName: "fake-source"},
-									GcsDataSink:      &storagetransfer.GcsData{BucketName: "fake-target"},
-									ObjectConditions: &storagetransfer.ObjectConditions{}, // Empty object conditions specified.
-								},
+								// Schedule can be empty because there is no TransferSpec?
+								Schedule: &storagetransfer.Schedule{},
 							},
 						},
 					},
 					// a fake job that is disabled.
+					// With this fake job, we don't need detail in TransferJobs
 					job: &storagetransfer.TransferJob{},
 				},
 			},
@@ -157,6 +150,7 @@ func TestCommand_Sync(t *testing.T) {
 			name: "error-list-jobs",
 			c: &Command{
 				Client: &fakeTJ{
+					// With listErr, we don't need any other client detail
 					listErr: errors.New("Fake list error"),
 				},
 			},
@@ -176,21 +170,15 @@ func TestCommand_Sync(t *testing.T) {
 							{
 								Name:        "transferOperations/description-matches",
 								Description: getDesc("fake-source", "fake-target", flagx.Time{Hour: 1, Minute: 2, Second: 3}),
-								Schedule: &storagetransfer.Schedule{
-									ScheduleEndDate: nil,
-									StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
-								},
-								TransferSpec: &storagetransfer.TransferSpec{
-									GcsDataSource:    &storagetransfer.GcsData{BucketName: "fake-source"},
-									GcsDataSink:      &storagetransfer.GcsData{BucketName: "fake-target"},
-									ObjectConditions: &storagetransfer.ObjectConditions{IncludePrefixes: []string{"c", "d"}}, // IncludePrefixes do not match command.Prefixes.
-								},
+								// Schedule can be empty because there is no TransferSpec?
+								Schedule: &storagetransfer.Schedule{},
 							},
 						},
 					},
 					getErr: errors.New("fake get error causes Disable() to fail"),
 				},
 			},
+			// With true  wantErr, Schedule can be empty, and TransferSpec is not needed.
 			wantErr: true,
 		},
 		{
@@ -206,21 +194,15 @@ func TestCommand_Sync(t *testing.T) {
 							{
 								Name:        "transferOperations/description-matches",
 								Description: getDesc("fake-source", "fake-target", flagx.Time{Hour: 3, Minute: 2, Second: 1}),
-								Schedule: &storagetransfer.Schedule{
-									ScheduleEndDate: nil,
-									StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
-								},
-								TransferSpec: &storagetransfer.TransferSpec{
-									GcsDataSource:    &storagetransfer.GcsData{BucketName: "fake-source"},
-									GcsDataSink:      &storagetransfer.GcsData{BucketName: "fake-target"},
-									ObjectConditions: &storagetransfer.ObjectConditions{},
-								},
+								// Schedule can be empty because there is no TransferSpec?
+								Schedule: &storagetransfer.Schedule{},
 							},
 						},
 					},
 					getErr: errors.New("fake get error causes Disable() to fail"),
 				},
 			},
+			// With true  wantErr, Schedule can be empty, and TransferSpec is not needed.
 			wantErr: true,
 		},
 	}
@@ -231,6 +213,7 @@ func TestCommand_Sync(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Command.Sync() error = %v, wantErr %v", err, tt.wantErr)
 			}
+			// This only runs when !wantErr.  Otherwise, the fake job is never referenced.
 			if diff := deep.Equal(job, tt.expected); diff != nil && !tt.wantErr {
 				t.Errorf("Command.Sync() job did not match expected;\n%s", strings.Join(diff, "\n"))
 			}
