@@ -23,7 +23,7 @@ func (c *Command) Sync(ctx context.Context) (*storagetransfer.TransferJob, error
 	notFound := fmt.Errorf("no matching job found")
 
 	// Generate canonical description from current config.
-	desc := getDesc(c.SourceBucket, c.TargetBucket)
+	desc := getDesc(c.SourceBucket, c.TargetBucket, c.StartTime)
 
 	// List jobs and find first that matches canonical description.
 	logx.Debug.Println("Listing jobs")

@@ -27,14 +27,104 @@ steps:
              'sync'
   ]
 
-# 03:30:00 Configure daily local archive to public archive transfer.
+# 04:00:00 Configure daily local archive to public archive transfer.
+# NOTE that this transfer is only 1.5 hours after the previous transfer.
+# The other transfers are staggered by 3 hours, and we should consider
+# making this one 3 hours as well, but that would increase the latency
+# before the data is available for parsing.
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=measurement-lab
   args: [
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
-             '-time=03:30:00',
+             '-time=04:00:00',
+             'sync'
+  ]
+
+# Repeat transfers every 6 hours, so that the final transfer
+# has less data to move, and can complete more quickly.
+
+# 08:30:00 Configure daily pusher to local archive transfer.
+- name: gcp-config-cbif
+  env:
+  - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
+  args: [
+    'stctl', '-gcs.source=pusher-$PROJECT_ID',
+             '-gcs.target=archive-$PROJECT_ID',
+             '-time=08:30:00',
+             '-include=ndt',
+             '-include=host',
+             '-include=neubot',
+             '-include=utilization',
+             '-include=wehe',
+             'sync'
+  ]
+
+# 11:30:00 Configure daily local archive to public archive transfer.
+- name: gcp-config-cbif
+  env:
+  - PROJECT_IN=measurement-lab
+  args: [
+    'stctl', '-gcs.source=archive-mlab-oti',
+             '-gcs.target=archive-measurement-lab',
+             '-time=11:30:00',
+             'sync'
+  ]
+
+
+# 14:30:00 Configure daily pusher to local archive transfer.
+- name: gcp-config-cbif
+  env:
+  - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
+  args: [
+    'stctl', '-gcs.source=pusher-$PROJECT_ID',
+             '-gcs.target=archive-$PROJECT_ID',
+             '-time=14:30:00',
+             '-include=ndt',
+             '-include=host',
+             '-include=neubot',
+             '-include=utilization',
+             '-include=wehe',
+             'sync'
+  ]
+
+# 17:30:00 Configure daily local archive to public archive transfer.
+- name: gcp-config-cbif
+  env:
+  - PROJECT_IN=measurement-lab
+  args: [
+    'stctl', '-gcs.source=archive-mlab-oti',
+             '-gcs.target=archive-measurement-lab',
+             '-time=17:30:00',
+             'sync'
+  ]
+
+
+# 20:30:00 Configure daily pusher to local archive transfer.
+- name: gcp-config-cbif
+  env:
+  - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
+  args: [
+    'stctl', '-gcs.source=pusher-$PROJECT_ID',
+             '-gcs.target=archive-$PROJECT_ID',
+             '-time=20:30:00',
+             '-include=ndt',
+             '-include=host',
+             '-include=neubot',
+             '-include=utilization',
+             '-include=wehe',
+             'sync'
+  ]
+
+# 23:30:00 Configure daily local archive to public archive transfer.
+- name: gcp-config-cbif
+  env:
+  - PROJECT_IN=measurement-lab
+  args: [
+    'stctl', '-gcs.source=archive-mlab-oti',
+             '-gcs.target=archive-measurement-lab',
+             '-time=23:30:00',
              'sync'
   ]
 
