@@ -45,6 +45,7 @@ func TestCommand_Sync(t *testing.T) {
 									ObjectConditions: &storagetransfer.ObjectConditions{
 										IncludePrefixes:                     []string{"a", "b"},
 										MaxTimeElapsedSinceLastModification: "432000s",
+										MinTimeElapsedSinceLastModification: "3600s",
 									},
 								},
 							},
@@ -56,6 +57,7 @@ func TestCommand_Sync(t *testing.T) {
 				Prefixes:     []string{"a", "b"},
 				StartTime:    flagx.Time{Hour: 1, Minute: 2, Second: 3},
 				MaxFileAge:   5 * 24 * time.Hour,
+				MinFileAge:   time.Hour,
 			},
 			expected: &storagetransfer.TransferJob{
 				Description: "STCTL: transfer fake-source -> fake-target at 01:02:03",
@@ -69,6 +71,7 @@ func TestCommand_Sync(t *testing.T) {
 					ObjectConditions: &storagetransfer.ObjectConditions{
 						IncludePrefixes:                     []string{"a", "b"},
 						MaxTimeElapsedSinceLastModification: "432000s",
+						MinTimeElapsedSinceLastModification: "3600s",
 					},
 				},
 			},
