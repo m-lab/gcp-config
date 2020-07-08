@@ -63,7 +63,7 @@ func getSpec(src, dest string, prefixes []string) *storagetransfer.TransferSpec 
 		spec.ObjectConditions = &storagetransfer.ObjectConditions{
 			IncludePrefixes: prefixes,
 			// Only files modified in the last 5 days.
-			MaxTimeElapsedSinceLastModification: "432000",
+			MaxTimeElapsedSinceLastModification: "432000s",
 		}
 	}
 	return spec
