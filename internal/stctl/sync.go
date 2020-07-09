@@ -3,7 +3,6 @@ package stctl
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/m-lab/go/flagx"
@@ -95,18 +94,11 @@ func specMatches(job *storagetransfer.TransferJob, start flagx.Time, prefixes []
 		!timesEqual(job.Schedule.StartTimeOfDay, start) {
 		return false
 	}
-	if job.TransferSpec.ObjectConditions == nil {
-		return false
-	}
 	cond := job.TransferSpec.ObjectConditions
-	if !includesEqual(cond.IncludePrefixes, prefixes) {
-		return false
-	}
-	if fmt.Sprintf("%0.fs", maxAge.Seconds()) != cond.MaxTimeElapsedSinceLastModification {
-		log.Printf("%0.fs", maxAge.Seconds())
-		return false
-	}
-	if fmt.Sprintf("%0.fs", minAge.Seconds()) != cond.MinTimeElapsedSinceLastModification {
+	if job.TransferSpec.ObjectConditions == nil ||
+		!includesEqual(cond.IncludePrefixes, prefixes) ||
+		fmt.Sprintf("%0.fs", maxAge.Seconds()) != cond.MaxTimeElapsedSinceLastModification ||
+		fmt.Sprintf("%0.fs", minAge.Seconds()) != cond.MinTimeElapsedSinceLastModification {
 		return false
 	}
 
