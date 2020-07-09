@@ -29,7 +29,7 @@ steps:
              'sync'
   ]
 
-# 04:00:00 Configure daily local archive to public archive transfer.
+# 04:30:00 Configure daily local archive to public archive transfer.
 # NOTE that this transfer is only 1.5 hours after the previous transfer.
 # The other transfers are staggered by 3 hours, and we should consider
 # making this one 3 hours as well, but that would increase the latency
@@ -40,7 +40,7 @@ steps:
   args: [
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
-             '-time=04:00:00',
+             '-time=04:30:00',
              '-minFileAge=10m',
              '-maxFileAge=12h',
              'sync'
@@ -67,14 +67,14 @@ steps:
              'sync'
   ]
 
-# 11:30:00 Configure daily local archive to public archive transfer.
+# 10:30:00 Configure daily local archive to public archive transfer.
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=measurement-lab
   args: [
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
-             '-time=11:30:00',
+             '-time=10:30:00',
              '-minFileAge=10m',
              '-maxFileAge=12h',
              'sync'
@@ -83,7 +83,9 @@ steps:
 
 # 14:30:00 Configure daily pusher to local archive transfer.
 # For this one, maxFileAge is set to 7 days, to catch stragglers.
-# This likely means the calculating phase will take much longer.
+# This likely means the calculating phase will take much longer, but this
+# transfer is 12 hours offset from the last transfer of the day
+# preceeding the daily parsing kickoff.
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
@@ -101,7 +103,7 @@ steps:
              'sync'
   ]
 
-# 17:30:00 Configure daily local archive to public archive transfer.
+# 16:30:00 Configure daily local archive to public archive transfer.
 # For this one, maxFileAge is set to 8 days, to catch stragglers.
 # This likely means the calculating phase will take much longer.
 - name: gcp-config-cbif
@@ -110,7 +112,7 @@ steps:
   args: [
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
-             '-time=17:30:00',
+             '-time=16:30:00',
              '-minFileAge=10m',
              '-maxFileAge=192h',  # 8 days
              'sync'
@@ -135,14 +137,14 @@ steps:
              'sync'
   ]
 
-# 23:30:00 Configure daily local archive to public archive transfer.
+# 22:30:00 Configure daily local archive to public archive transfer.
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=measurement-lab
   args: [
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
-             '-time=23:30:00',
+             '-time=22:30:00',
              '-minFileAge=10m',
              '-maxFileAge=12h',
              'sync'
