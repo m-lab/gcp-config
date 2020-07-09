@@ -19,6 +19,7 @@ steps:
     'stctl', '-gcs.source=pusher-$PROJECT_ID',
              '-gcs.target=archive-$PROJECT_ID',
              '-time=02:30:00',
+             '-minFileAge=10m',
              '-maxFileAge=12h',
              '-include=ndt',
              '-include=host',
@@ -40,6 +41,7 @@ steps:
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
              '-time=04:00:00',
+             '-minFileAge=10m',
              '-maxFileAge=12h',
              'sync'
   ]
@@ -55,6 +57,7 @@ steps:
     'stctl', '-gcs.source=pusher-$PROJECT_ID',
              '-gcs.target=archive-$PROJECT_ID',
              '-time=08:30:00',
+             '-minFileAge=10m',
              '-maxFileAge=12h',
              '-include=ndt',
              '-include=host',
@@ -72,6 +75,7 @@ steps:
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
              '-time=11:30:00',
+             '-minFileAge=10m',
              '-maxFileAge=12h',
              'sync'
   ]
@@ -87,7 +91,8 @@ steps:
     'stctl', '-gcs.source=pusher-$PROJECT_ID',
              '-gcs.target=archive-$PROJECT_ID',
              '-time=14:30:00',
-             '-maxFileAge=7d',
+             '-minFileAge=10m',
+             '-maxFileAge=168h',  # 7 days
              '-include=ndt',
              '-include=host',
              '-include=neubot',
@@ -106,7 +111,8 @@ steps:
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
              '-time=17:30:00',
-             '-maxFileAge=8d',
+             '-minFileAge=10m',
+             '-maxFileAge=192h',  # 8 days
              'sync'
   ]
 
@@ -119,6 +125,7 @@ steps:
     'stctl', '-gcs.source=pusher-$PROJECT_ID',
              '-gcs.target=archive-$PROJECT_ID',
              '-time=20:30:00',
+             '-minFileAge=10m',
              '-maxFileAge=12h',
              '-include=ndt',
              '-include=host',
@@ -136,6 +143,7 @@ steps:
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
              '-time=23:30:00',
+             '-minFileAge=10m',
              '-maxFileAge=12h',
              'sync'
   ]
