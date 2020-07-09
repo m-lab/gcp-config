@@ -3,6 +3,8 @@ package stctl
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/m-lab/go/flagx"
 	"github.com/m-lab/go/logx"
@@ -53,7 +55,7 @@ func (c *Command) Sync(ctx context.Context) (*storagetransfer.TransferJob, error
 	if found != nil {
 		logx.Debug.Println("Found job!")
 		logx.Debug.Print(pretty.Sprint(found))
-		if specMatches(found, c.StartTime, c.Prefixes) {
+		if specMatches(found, c.StartTime, c.Prefixes, c.MinFileAge, c.MaxFileAge) {
 			// We found a matching job, do nothing, return success.
 			logx.Debug.Println("Specs match!")
 			return found, nil
@@ -88,14 +90,25 @@ func includesEqual(configured []string, desired []string) bool {
 	return true
 }
 
-func specMatches(job *storagetransfer.TransferJob, start flagx.Time, prefixes []string) bool {
+func specMatches(job *storagetransfer.TransferJob, start flagx.Time, prefixes []string, minAge, maxAge time.Duration) bool {
 	if job.Schedule.StartTimeOfDay == nil ||
 		!timesEqual(job.Schedule.StartTimeOfDay, start) {
 		return false
 	}
-	if job.TransferSpec.ObjectConditions == nil ||
-		!includesEqual(job.TransferSpec.ObjectConditions.IncludePrefixes, prefixes) {
+	if job.TransferSpec.ObjectConditions == nil {
 		return false
 	}
+	cond := job.TransferSpec.ObjectConditions
+	if !includesEqual(cond.IncludePrefixes, prefixes) {
+		return false
+	}
+	if fmt.Sprintf("%0.fs", maxAge.Seconds()) != cond.MaxTimeElapsedSinceLastModification {
+		log.Printf("%0.fs", maxAge.Seconds())
+		return false
+	}
+	if fmt.Sprintf("%0.fs", minAge.Seconds()) != cond.MinTimeElapsedSinceLastModification {
+		return false
+	}
+
 	return true
 }
