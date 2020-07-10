@@ -18,6 +18,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/m-lab/gcp-config/internal/stctl"
 	"github.com/m-lab/gcp-config/transfer"
@@ -36,6 +37,8 @@ var (
 	prefixes     flagx.StringArray
 	startTime    flagx.Time
 	afterDate    flagx.DateTime
+	minAge       time.Duration
+	maxAge       time.Duration
 )
 
 func init() {
@@ -45,6 +48,8 @@ func init() {
 	flag.Var(&prefixes, "include", "Only transfer files with given prefix. Default all prefixes. Can be specified multiple times.")
 	flag.Var(&startTime, "time", "Start daily transfer at this time (HH:MM:SS)")
 	flag.Var(&afterDate, "after", "Only list operations that ran after the given date. Default is all dates.")
+	flag.DurationVar(&minAge, "minFileAge", 0, "Minimum time since file modification")
+	flag.DurationVar(&maxAge, "maxFileAge", 0, "Maximum time since file modification")
 }
 
 var usageText = `
@@ -61,7 +66,7 @@ EXAMPLES
   stctl -project-id <project> operations <job name>
 
   stctl -project-id <project> create -gcs.source <bucket> -gcs.target <bucket> \
-    -time <HH:MM:SS> -include ndt -include host -include neubot -include utilization
+    -time <HH:MM:SS> -maxAge <duration> -minAge <duration> -include ndt -include host -include neubot -include utilization
 
   stctl -project-id <project> disable <job name>
 
@@ -100,6 +105,8 @@ func main() {
 		Prefixes:     prefixes,
 		StartTime:    startTime,
 		AfterDate:    afterDate.Time,
+		MinFileAge:   minAge.Truncate(time.Second),
+		MaxFileAge:   maxAge.Truncate(time.Second),
 		Output:       os.Stdout,
 	}
 

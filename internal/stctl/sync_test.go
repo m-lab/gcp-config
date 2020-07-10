@@ -46,6 +46,7 @@ func TestCommand_Sync(t *testing.T) {
 									ObjectConditions: &storagetransfer.ObjectConditions{
 										IncludePrefixes:                     []string{"a", "b"},
 										MaxTimeElapsedSinceLastModification: "432000s",
+										MinTimeElapsedSinceLastModification: "3600s",
 									},
 								},
 							},
@@ -56,6 +57,8 @@ func TestCommand_Sync(t *testing.T) {
 				TargetBucket: "fake-target",
 				Prefixes:     []string{"a", "b"},
 				StartTime:    flagx.Time{Hour: 1, Minute: 2, Second: 3},
+				MaxFileAge:   5 * 24 * time.Hour,
+				MinFileAge:   time.Hour,
 			},
 			expected: &storagetransfer.TransferJob{
 				Description: "STCTL: transfer fake-source -> fake-target at 01:02:03",
@@ -69,6 +72,7 @@ func TestCommand_Sync(t *testing.T) {
 					ObjectConditions: &storagetransfer.ObjectConditions{
 						IncludePrefixes:                     []string{"a", "b"},
 						MaxTimeElapsedSinceLastModification: "432000s",
+						MinTimeElapsedSinceLastModification: "3600s",
 					},
 				},
 			},
@@ -118,8 +122,7 @@ func TestCommand_Sync(t *testing.T) {
 					GcsDataSource: &storagetransfer.GcsData{BucketName: "fake-source"},
 					GcsDataSink:   &storagetransfer.GcsData{BucketName: "fake-target"},
 					ObjectConditions: &storagetransfer.ObjectConditions{
-						IncludePrefixes:                     []string{"a", "b"},
-						MaxTimeElapsedSinceLastModification: "432000s",
+						IncludePrefixes: []string{"a", "b"},
 					},
 				},
 				Status: "ENABLED",
@@ -206,33 +209,29 @@ func TestCommand_Sync(t *testing.T) {
 							{
 								Name:        "transferOperations/description-matches",
 								Description: getDesc("fake-source", "fake-target", flagx.Time{Hour: 3, Minute: 2, Second: 1}),
-								Schedule: &storagetransfer.Schedule{
-									ScheduleEndDate: nil,
-									StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
-								},
-								TransferSpec: &storagetransfer.TransferSpec{
-									GcsDataSource:    &storagetransfer.GcsData{BucketName: "fake-source"},
-									GcsDataSink:      &storagetransfer.GcsData{BucketName: "fake-target"},
-									ObjectConditions: &storagetransfer.ObjectConditions{},
-								},
+								// Schedule can be empty because there is no TransferSpec?
+								Schedule: &storagetransfer.Schedule{},
 							},
 						},
 					},
 					getErr: errors.New("fake get error causes Disable() to fail"),
 				},
 			},
+			// With true  wantErr, Schedule can be empty, and TransferSpec is not needed.
+			// This does not impact test coverage.
 			wantErr: true,
 		},
 	}
-	for i, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
 			job, err := tt.c.Sync(ctx)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Command.Sync() %d error = %v, wantErr %v", i, err, tt.wantErr)
+				t.Errorf("Command.Sync() error = %v, wantErr %v", err, tt.wantErr)
 			}
+			// This only runs when !wantErr.  Otherwise, the fake job is never referenced.
 			if diff := deep.Equal(job, tt.expected); diff != nil && !tt.wantErr {
-				t.Errorf("Command.Sync() %d job did not match expected;\n%s", i, strings.Join(diff, "\n"))
+				t.Errorf("Command.Sync() job did not match expected;\n%s", strings.Join(diff, "\n"))
 			}
 		})
 	}

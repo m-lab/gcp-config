@@ -40,6 +40,7 @@ func TestCommand_Create(t *testing.T) {
 			ObjectConditions: &storagetransfer.ObjectConditions{
 				IncludePrefixes:                     []string{"ndt"},
 				MaxTimeElapsedSinceLastModification: "432000s",
+				MinTimeElapsedSinceLastModification: "3600s",
 			},
 		},
 	}
@@ -57,6 +58,8 @@ func TestCommand_Create(t *testing.T) {
 				StartTime:    flagx.Time{Hour: 2, Minute: 10},
 				SourceBucket: "src-bucket",
 				TargetBucket: "dest-bucket",
+				MaxFileAge:   5 * 24 * time.Hour,
+				MinFileAge:   time.Hour,
 				Project:      "fake-mlab-testing",
 			},
 		},
@@ -75,10 +78,10 @@ func TestCommand_Create(t *testing.T) {
 			ctx := context.Background()
 			job, err := tt.c.Create(ctx)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Command.Create() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Command.Create(%s) error = %v, wantErr %v", tt.name, err, tt.wantErr)
 			}
 			if diff := deep.Equal(job, expected); diff != nil && !tt.wantErr {
-				t.Errorf("Command.Create() returned and expected jobs differ; %v", diff)
+				t.Errorf("Command.Create(%s) returned and expected jobs differ; %v", tt.name, diff)
 			}
 		})
 	}
