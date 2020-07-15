@@ -1,11 +1,11 @@
 # This file defines automated storage transfers from pusher-* to archive-*
 # and, for production, from archive-mlab-oti to archive-measurement-lab
 # The overall schedule is (all times UTC):
-# pusher ->         archive: 02:30, 08:30, 14:30, 20:30
-# oti    -> measurement-lab: 04:30, 10:30, 16:30, 22:30
-# There is some concern whether the 2 hour delay is sufficient to avoid
-# missing files in the latter transfer.  We may adjust this after observing
-# for several days.
+#     pusher ->         archive: 02:30, 14:30
+#     oti    -> measurement-lab: 06:30, 18:30
+#
+# NOTE: four hour delays are based on typical transfer times for recent GCS ST
+# jobs (2020-07-15).
 options:
   env:
   - PROJECT_ID=$PROJECT_ID
@@ -27,8 +27,7 @@ steps:
     'stctl', '-gcs.source=pusher-$PROJECT_ID',
              '-gcs.target=archive-$PROJECT_ID',
              '-time=02:30:00',
-             '-minFileAge=1m',
-             '-maxFileAge=12h',
+             '-maxFileAge=27h',
              '-include=ndt',
              '-include=host',
              '-include=neubot',
@@ -37,57 +36,22 @@ steps:
              'sync'
   ]
 
-# 04:30:00 Configure daily local archive to public archive transfer.
-# NOTE that this transfer is only 1.5 hours after the previous transfer.
-# The other transfers are staggered by 3 hours, and we should consider
-# making this one 3 hours as well, but that would increase the latency
-# before the data is available for parsing.
+# 06:30:00 Configure daily local archive to public archive transfer.
+# NOTE: this transfer is 4 hours after the previous transfer based on recent
+# GCS ST jobs (2020-07-15).
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=measurement-lab
   args: [
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
-             '-time=04:30:00',
-             '-minFileAge=1m',
-             '-maxFileAge=12h',
+             '-time=06:30:00',
+             '-maxFileAge=27h',
              'sync'
   ]
 
-# Repeat transfers every 6 hours, so that the final transfer
+# Repeat transfers every 12 hours, so that the final transfer
 # has less data to move, and can complete more quickly.
-
-# 08:30:00 Configure daily pusher to local archive transfer.
-- name: gcp-config-cbif
-  env:
-  - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
-  args: [
-    'stctl', '-gcs.source=pusher-$PROJECT_ID',
-             '-gcs.target=archive-$PROJECT_ID',
-             '-time=08:30:00',
-             '-minFileAge=1m',
-             '-maxFileAge=12h',
-             '-include=ndt',
-             '-include=host',
-             '-include=neubot',
-             '-include=utilization',
-             '-include=wehe',
-             'sync'
-  ]
-
-# 10:30:00 Configure daily local archive to public archive transfer.
-- name: gcp-config-cbif
-  env:
-  - PROJECT_IN=measurement-lab
-  args: [
-    'stctl', '-gcs.source=archive-mlab-oti',
-             '-gcs.target=archive-measurement-lab',
-             '-time=10:30:00',
-             '-minFileAge=1m',
-             '-maxFileAge=12h',
-             'sync'
-  ]
-
 
 # 14:30:00 Configure daily pusher to local archive transfer.
 # For this one, maxFileAge is set to 7 days, to catch stragglers.
@@ -101,7 +65,6 @@ steps:
     'stctl', '-gcs.source=pusher-$PROJECT_ID',
              '-gcs.target=archive-$PROJECT_ID',
              '-time=14:30:00',
-             '-minFileAge=1m',
              '-maxFileAge=168h',  # 7 days
              '-include=ndt',
              '-include=host',
@@ -111,7 +74,7 @@ steps:
              'sync'
   ]
 
-# 16:30:00 Configure daily local archive to public archive transfer.
+# 18:30:00 Configure daily local archive to public archive transfer.
 # For this one, maxFileAge is set to 8 days, to catch stragglers.
 # This likely means the calculating phase will take much longer.
 - name: gcp-config-cbif
@@ -120,43 +83,14 @@ steps:
   args: [
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
-             '-time=16:30:00',
-             '-minFileAge=1m',
+             '-time=18:30:00',
              '-maxFileAge=192h',  # 8 days
              'sync'
   ]
 
 
-# 20:30:00 Configure daily pusher to local archive transfer.
-- name: gcp-config-cbif
-  env:
-  - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
-  args: [
-    'stctl', '-gcs.source=pusher-$PROJECT_ID',
-             '-gcs.target=archive-$PROJECT_ID',
-             '-time=20:30:00',
-             '-minFileAge=1m',
-             '-maxFileAge=12h',
-             '-include=ndt',
-             '-include=host',
-             '-include=neubot',
-             '-include=utilization',
-             '-include=wehe',
-             'sync'
-  ]
-
-# 22:30:00 Configure daily local archive to public archive transfer.
-- name: gcp-config-cbif
-  env:
-  - PROJECT_IN=measurement-lab
-  args: [
-    'stctl', '-gcs.source=archive-mlab-oti',
-             '-gcs.target=archive-measurement-lab',
-             '-time=22:30:00',
-             '-minFileAge=1m',
-             '-maxFileAge=12h',
-             'sync'
-  ]
+# TODO(soltesz): once ST schedules above stabilize, bring backup transfer
+# schedule in sync. Until then, complete daily backups will be delayed by a day.
 
 # 04:30:00 Gardener or other jobs that depend on the public archive being up to date may run.
 # 04:30:00 Configure daily public archive to backup transfer.
