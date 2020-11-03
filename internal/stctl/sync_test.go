@@ -15,10 +15,12 @@ import (
 func TestCommand_Sync(t *testing.T) {
 	ts := time.Now().UTC()
 	tests := []struct {
-		name     string
-		c        *Command
-		expected *storagetransfer.TransferJob
-		wantErr  bool
+		name        string
+		c           *Command
+		expected    *storagetransfer.TransferJob
+		wantErr     bool
+		shouldFind  bool // The specified job should be found in the client
+		shouldMatch bool // The specified job should match the existing job.
 	}{
 		{
 			name: "success-job-found-specs-match",
@@ -48,18 +50,24 @@ func TestCommand_Sync(t *testing.T) {
 										MaxTimeElapsedSinceLastModification: "432000s",
 										MinTimeElapsedSinceLastModification: "3600s",
 									},
+									TransferOptions: &storagetransfer.TransferOptions{
+										DeleteObjectsFromSourceAfterTransfer: true,
+									},
 								},
 							},
 						},
 					},
 				},
-				SourceBucket: "fake-source",
-				TargetBucket: "fake-target",
-				Prefixes:     []string{"a", "b"},
-				StartTime:    flagx.Time{Hour: 1, Minute: 2, Second: 3},
-				MaxFileAge:   5 * 24 * time.Hour,
-				MinFileAge:   time.Hour,
+				SourceBucket:        "fake-source",
+				TargetBucket:        "fake-target",
+				Prefixes:            []string{"a", "b"},
+				StartTime:           flagx.Time{Hour: 1, Minute: 2, Second: 3},
+				MaxFileAge:          5 * 24 * time.Hour,
+				MinFileAge:          time.Hour,
+				DeleteAfterTransfer: true,
 			},
+			shouldFind:  true,
+			shouldMatch: true,
 			expected: &storagetransfer.TransferJob{
 				Description: "STCTL: transfer fake-source -> fake-target at 01:02:03",
 				Name:        "transferOperations/description-matches-gcs-buckets",
@@ -74,6 +82,9 @@ func TestCommand_Sync(t *testing.T) {
 						MaxTimeElapsedSinceLastModification: "432000s",
 						MinTimeElapsedSinceLastModification: "3600s",
 					},
+					TransferOptions: &storagetransfer.TransferOptions{
+						DeleteObjectsFromSourceAfterTransfer: true,
+					},
 				},
 			},
 		},
@@ -84,6 +95,7 @@ func TestCommand_Sync(t *testing.T) {
 				TargetBucket: "fake-target",
 				Prefixes:     []string{"a", "b"},
 				StartTime:    flagx.Time{Hour: 1, Minute: 2, Second: 3},
+				// DeleteAfterTransfer: true,
 				Client: &fakeTJ{
 					// fake jobs that are listed to search for one that matches the current Command spec.
 					listJobResp: &storagetransfer.ListTransferJobsResponse{
@@ -107,6 +119,7 @@ func TestCommand_Sync(t *testing.T) {
 					job: &storagetransfer.TransferJob{},
 				},
 			},
+			shouldFind: true,
 			expected: &storagetransfer.TransferJob{
 				Description: "STCTL: transfer fake-source -> fake-target at 01:02:03",
 				Name:        "THIS-IS-A-FAKE-ASSIGNED-JOB-NAME",
@@ -194,7 +207,8 @@ func TestCommand_Sync(t *testing.T) {
 					getErr: errors.New("fake get error causes Disable() to fail"),
 				},
 			},
-			wantErr: true,
+			shouldFind: true,
+			wantErr:    true,
 		},
 		{
 			name: "error-found-and-disable-error-different-start-times",
@@ -217,14 +231,29 @@ func TestCommand_Sync(t *testing.T) {
 					getErr: errors.New("fake get error causes Disable() to fail"),
 				},
 			},
-			// With true  wantErr, Schedule can be empty, and TransferSpec is not needed.
+			// With true wantErr, Schedule can be empty, and TransferSpec is not needed.
 			// This does not impact test coverage.
-			wantErr: true,
+			wantErr:    true,
+			shouldFind: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
+			found, err := tt.c.find(ctx)
+			if !tt.wantErr && err != errNotFound && err != nil {
+				t.Errorf("Command.Sync() error = %v", err)
+			}
+			if (found != nil) != tt.shouldFind {
+				t.Errorf("Command.Sync() found = %v, shouldFind = %v", found, tt.shouldFind)
+			}
+			if found != nil {
+				matches := tt.c.specMatches(found)
+				if matches != tt.shouldMatch {
+					t.Errorf("Command.Sync() matches = %v, shouldMatch = %v", matches, tt.shouldMatch)
+				}
+			}
+
 			job, err := tt.c.Sync(ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Command.Sync() error = %v, wantErr %v", err, tt.wantErr)

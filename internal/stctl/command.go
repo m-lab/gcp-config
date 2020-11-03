@@ -42,16 +42,17 @@ type TransferJob interface {
 
 // Command executes stctl actions.
 type Command struct {
-	Client       TransferJob
-	Project      string
-	SourceBucket string
-	TargetBucket string
-	Prefixes     []string
-	StartTime    flagx.Time
-	AfterDate    time.Time
-	MinFileAge   time.Duration
-	MaxFileAge   time.Duration
-	Output       io.Writer
+	Client              TransferJob
+	Project             string
+	SourceBucket        string
+	TargetBucket        string
+	Prefixes            []string
+	StartTime           flagx.Time
+	AfterDate           time.Time
+	MinFileAge          time.Duration
+	MaxFileAge          time.Duration
+	DeleteAfterTransfer bool
+	Output              io.Writer
 }
 
 // ListJobs lists enabled transfer jobs.
