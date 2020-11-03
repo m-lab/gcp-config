@@ -3,7 +3,6 @@ package stctl
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/m-lab/go/flagx"
 	"github.com/m-lab/go/logx"
@@ -14,14 +13,14 @@ import (
 	"google.golang.org/api/storagetransfer/v1"
 )
 
-// Sync guarantees that a job exists matching the current command parameters. If
-// a job with matching command parameters already exists, no action is taken. If
-// a matching description is found with different values for IncludePrefixes or
-// StartTimeOfDay, then the original job is disabled and a new job created. In
-// either case, the found or newly created job is returned on success.
-func (c *Command) Sync(ctx context.Context) (*storagetransfer.TransferJob, error) {
+var (
+	errNotFound = fmt.Errorf("no matching job found")
+)
+
+// find searches the Client for a TransferJob with matching Description.
+// The returned TransferJob may or may not match the rest of the job spec.
+func (c *Command) find(ctx context.Context) (*storagetransfer.TransferJob, error) {
 	var found *storagetransfer.TransferJob
-	notFound := fmt.Errorf("no matching job found")
 
 	// Generate canonical description from current config.
 	desc := getDesc(c.SourceBucket, c.TargetBucket, c.StartTime)
@@ -44,17 +43,27 @@ func (c *Command) Sync(ctx context.Context) (*storagetransfer.TransferJob, error
 			}
 		}
 		// Job was not found.
-		return notFound
+		return errNotFound
 	}
 
 	err := c.Client.Jobs(ctx, findJob)
-	if err != notFound && err != nil {
+	return found, err
+}
+
+// Sync guarantees that a job exists matching the current command parameters. If
+// a job with matching command parameters already exists, no action is taken. If
+// a matching description is found with different values for IncludePrefixes or
+// StartTimeOfDay, then the original job is disabled and a new job created. In
+// either case, the found or newly created job is returned on success.
+func (c *Command) Sync(ctx context.Context) (*storagetransfer.TransferJob, error) {
+	found, err := c.find(ctx)
+	if err != errNotFound && err != nil {
 		return nil, err
 	}
 	if found != nil {
 		logx.Debug.Println("Found job!")
 		logx.Debug.Print(pretty.Sprint(found))
-		if specMatches(found, c.StartTime, c.Prefixes, c.MinFileAge, c.MaxFileAge) {
+		if c.specMatches(found) {
 			// We found a matching job, do nothing, return success.
 			logx.Debug.Println("Specs match!")
 			return found, nil
@@ -89,16 +98,21 @@ func includesEqual(configured []string, desired []string) bool {
 	return true
 }
 
-func specMatches(job *storagetransfer.TransferJob, start flagx.Time, prefixes []string, minAge, maxAge time.Duration) bool {
+func (c *Command) specMatches(job *storagetransfer.TransferJob) bool {
 	if job.Schedule.StartTimeOfDay == nil ||
-		!timesEqual(job.Schedule.StartTimeOfDay, start) {
+		!timesEqual(job.Schedule.StartTimeOfDay, c.StartTime) {
 		return false
 	}
 	cond := job.TransferSpec.ObjectConditions
 	if job.TransferSpec.ObjectConditions == nil ||
-		!includesEqual(cond.IncludePrefixes, prefixes) ||
-		fmt.Sprintf("%0.fs", maxAge.Seconds()) != cond.MaxTimeElapsedSinceLastModification ||
-		fmt.Sprintf("%0.fs", minAge.Seconds()) != cond.MinTimeElapsedSinceLastModification {
+		!includesEqual(cond.IncludePrefixes, c.Prefixes) ||
+		fmt.Sprintf("%0.fs", c.MaxFileAge.Seconds()) != cond.MaxTimeElapsedSinceLastModification ||
+		fmt.Sprintf("%0.fs", c.MinFileAge.Seconds()) != cond.MinTimeElapsedSinceLastModification {
+		return false
+	}
+
+	jobDeleteOption := job.TransferSpec.TransferOptions != nil && job.TransferSpec.TransferOptions.DeleteObjectsFromSourceAfterTransfer
+	if c.DeleteAfterTransfer != jobDeleteOption {
 		return false
 	}
 

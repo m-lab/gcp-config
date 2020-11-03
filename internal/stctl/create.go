@@ -14,7 +14,7 @@ import (
 
 // Create creates a new storage transfer job.
 func (c *Command) Create(ctx context.Context) (*storagetransfer.TransferJob, error) {
-	spec := getSpec(c.SourceBucket, c.TargetBucket, c.Prefixes, c.MinFileAge, c.MaxFileAge)
+	spec := getSpec(c.SourceBucket, c.TargetBucket, c.Prefixes, c.MinFileAge, c.MaxFileAge, c.DeleteAfterTransfer)
 	desc := getDesc(c.SourceBucket, c.TargetBucket, c.StartTime)
 	ts := time.Now().UTC()
 	create := &storagetransfer.TransferJob{
@@ -37,7 +37,7 @@ func (c *Command) Create(ctx context.Context) (*storagetransfer.TransferJob, err
 			},
 		},
 		Status:       "ENABLED",
-		TransferSpec: spec,
+		TransferSpec: &spec,
 	}
 	logx.Debug.Print(pretty.Sprint(create))
 	// On success, the returned job will include an assigned job.Name.
@@ -50,8 +50,8 @@ func getDesc(src, dest string, start flagx.Time) string {
 	return fmt.Sprintf("STCTL: transfer %s -> %s at %s", src, dest, start)
 }
 
-func getSpec(src, dest string, prefixes []string, minAge, maxAge time.Duration) *storagetransfer.TransferSpec {
-	spec := &storagetransfer.TransferSpec{
+func getSpec(src, dest string, prefixes []string, minAge, maxAge time.Duration, deleteAfterTransfer bool) storagetransfer.TransferSpec {
+	spec := storagetransfer.TransferSpec{
 		GcsDataSource: &storagetransfer.GcsData{
 			BucketName: src,
 		},
@@ -72,6 +72,12 @@ func getSpec(src, dest string, prefixes []string, minAge, maxAge time.Duration) 
 	if minAge > 0 {
 		cond.MinTimeElapsedSinceLastModification = fmt.Sprintf("%.0fs", minAge.Seconds())
 		spec.ObjectConditions = cond
+	}
+
+	if deleteAfterTransfer {
+		spec.TransferOptions = &storagetransfer.TransferOptions{
+			DeleteObjectsFromSourceAfterTransfer: true,
+		}
 	}
 	return spec
 }
