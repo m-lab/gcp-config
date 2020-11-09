@@ -109,6 +109,37 @@ func (c *Command) ListOperations(ctx context.Context, name string) error {
 	return c.Client.Operations(ctx, name, visit)
 }
 
+func (c *Command) getSpec() storagetransfer.TransferSpec {
+	spec := storagetransfer.TransferSpec{
+		GcsDataSource: &storagetransfer.GcsData{
+			BucketName: c.SourceBucket,
+		},
+		GcsDataSink: &storagetransfer.GcsData{
+			BucketName: c.TargetBucket,
+		},
+	}
+
+	cond := &storagetransfer.ObjectConditions{}
+	if c.Prefixes != nil {
+		cond.IncludePrefixes = c.Prefixes
+		spec.ObjectConditions = cond
+	}
+	if c.MaxFileAge > 0 {
+		cond.MaxTimeElapsedSinceLastModification = fmt.Sprintf("%.0fs", c.MaxFileAge.Seconds())
+		spec.ObjectConditions = cond
+	}
+	if c.MinFileAge > 0 {
+		cond.MinTimeElapsedSinceLastModification = fmt.Sprintf("%.0fs", c.MinFileAge.Seconds())
+		spec.ObjectConditions = cond
+	}
+	if c.DeleteAfterTransfer {
+		spec.TransferOptions = &storagetransfer.TransferOptions{
+			DeleteObjectsFromSourceAfterTransfer: true,
+		}
+	}
+	return spec
+}
+
 func fmtTime(t *storagetransfer.TimeOfDay) string {
 	return fmt.Sprintf("%02d:%02d:%02d", t.Hours, t.Minutes, t.Seconds)
 }
