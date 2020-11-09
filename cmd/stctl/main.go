@@ -108,6 +108,7 @@ func main() {
 		MinFileAge:   minAge.Truncate(time.Second),
 		MaxFileAge:   maxAge.Truncate(time.Second),
 		Output:       os.Stdout,
+		// TODO - add Delete option
 	}
 
 	op := mustArg(0)
