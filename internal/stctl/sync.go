@@ -104,8 +104,11 @@ func (c *Command) specMatches(job *storagetransfer.TransferJob) bool {
 		return false
 	}
 	cond := job.TransferSpec.ObjectConditions
-	if job.TransferSpec.ObjectConditions == nil ||
-		!includesEqual(cond.IncludePrefixes, c.Prefixes) ||
+	if cond == nil {
+		if len(c.Prefixes) > 0 || c.MaxFileAge > 0 || c.MinFileAge > 0 {
+			return false
+		}
+	} else if !includesEqual(cond.IncludePrefixes, c.Prefixes) ||
 		fmt.Sprintf("%0.fs", c.MaxFileAge.Seconds()) != cond.MaxTimeElapsedSinceLastModification ||
 		fmt.Sprintf("%0.fs", c.MinFileAge.Seconds()) != cond.MinTimeElapsedSinceLastModification {
 		return false
