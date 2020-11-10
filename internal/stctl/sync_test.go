@@ -98,7 +98,6 @@ func TestCommand_Sync(t *testing.T) {
 				TargetBucket: "fake-target",
 				Prefixes:     []string{"a", "b"},
 				StartTime:    flagx.Time{Hour: 1, Minute: 2, Second: 3},
-				// DeleteAfterTransfer: true,
 				Client: &fakeTJ{
 					// fake jobs that are listed to search for one that matches the current Command spec.
 					listJobResp: &storagetransfer.ListTransferJobsResponse{

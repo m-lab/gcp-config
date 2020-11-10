@@ -166,9 +166,6 @@ func TestCommand_ListOperations(t *testing.T) {
 										ObjectConditions: &storagetransfer.ObjectConditions{
 											IncludePrefixes: []string{"ndt"},
 										},
-										TransferOptions: &storagetransfer.TransferOptions{
-											//DeleteObjectsFromSourceAfterTransfer: true,
-										},
 									},
 									Start: time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC),
 									End:   time.Date(2019, time.January, 1, 1, 0, 0, 0, time.UTC),
