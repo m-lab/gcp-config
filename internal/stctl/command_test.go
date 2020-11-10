@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Package stctl implements command actions.
-package stctl
+package stctl_test
 
 import (
 	"bytes"
@@ -23,9 +23,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/m-lab/gcp-config/internal/stctl"
 	"github.com/m-lab/go/rtx"
 	"google.golang.org/api/storagetransfer/v1"
 )
+
+type Command = stctl.Command
+type jobMetadata = stctl.JobMetadata
 
 type fakeTJ struct {
 	listJobResp *storagetransfer.ListTransferJobsResponse

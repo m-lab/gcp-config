@@ -1,4 +1,4 @@
-package stctl
+package stctl_test
 
 import (
 	"context"
@@ -8,9 +8,12 @@ import (
 	"time"
 
 	"github.com/go-test/deep"
+	"github.com/m-lab/gcp-config/internal/stctl"
 	"github.com/m-lab/go/flagx"
 	storagetransfer "google.golang.org/api/storagetransfer/v1"
 )
+
+var getDesc = stctl.GetDesc
 
 func TestCommand_Sync(t *testing.T) {
 	ts := time.Now().UTC()

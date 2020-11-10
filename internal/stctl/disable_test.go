@@ -1,4 +1,4 @@
-package stctl
+package stctl_test
 
 import (
 	"context"
