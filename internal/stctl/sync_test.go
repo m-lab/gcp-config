@@ -243,15 +243,15 @@ func TestCommand_Sync(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			found, err := tt.c.find(ctx)
-			if !tt.wantErr && err != errNotFound && err != nil {
+			found, err := stctl.Find(tt.c, ctx)
+			if !tt.wantErr && err != stctl.ErrNotFound && err != nil {
 				t.Errorf("Command.Sync() error = %v", err)
 			}
 			if (found != nil) != tt.shouldFind {
 				t.Errorf("Command.Sync() found = %v, shouldFind = %v", found, tt.shouldFind)
 			}
 			if found != nil {
-				matches := tt.c.specMatches(found)
+				matches := stctl.SpecMatches(tt.c, found)
 				if matches != tt.shouldMatch {
 					t.Errorf("Command.Sync() matches = %v, shouldMatch = %v", matches, tt.shouldMatch)
 				}
