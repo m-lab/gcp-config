@@ -31,14 +31,15 @@ import (
 )
 
 var (
-	project      string
-	sourceBucket string
-	destBucket   string
-	prefixes     flagx.StringArray
-	startTime    flagx.Time
-	afterDate    flagx.DateTime
-	minAge       time.Duration
-	maxAge       time.Duration
+	project             string
+	sourceBucket        string
+	destBucket          string
+	prefixes            flagx.StringArray
+	startTime           flagx.Time
+	afterDate           flagx.DateTime
+	minAge              time.Duration
+	maxAge              time.Duration
+	deleteAfterTransfer bool
 )
 
 func init() {
@@ -50,6 +51,7 @@ func init() {
 	flag.Var(&afterDate, "after", "Only list operations that ran after the given date. Default is all dates.")
 	flag.DurationVar(&minAge, "minFileAge", 0, "Minimum time since file modification")
 	flag.DurationVar(&maxAge, "maxFileAge", 0, "Maximum time since file modification")
+	flag.BoolVar(&deleteAfterTransfer, "deleteAfterTransfer", false, "Whether to delete source files after transfer")
 }
 
 var usageText = `
@@ -66,7 +68,8 @@ EXAMPLES
   stctl -project-id <project> operations <job name>
 
   stctl -project-id <project> create -gcs.source <bucket> -gcs.target <bucket> \
-    -time <HH:MM:SS> -maxAge <duration> -minAge <duration> -include ndt -include host -include neubot -include utilization
+	-time <HH:MM:SS> -maxAge <duration> -minAge <duration> -deleteAfterTransfer true \
+    -include ndt -include host -include neubot -include utilization
 
   stctl -project-id <project> disable <job name>
 
@@ -98,17 +101,17 @@ func main() {
 	rtx.Must(err, "Failed to create new storage transfer service")
 
 	cmd := &stctl.Command{
-		Client:       transfer.NewJob(project, service),
-		Project:      project,
-		SourceBucket: sourceBucket,
-		TargetBucket: destBucket,
-		Prefixes:     prefixes,
-		StartTime:    startTime,
-		AfterDate:    afterDate.Time,
-		MinFileAge:   minAge.Truncate(time.Second),
-		MaxFileAge:   maxAge.Truncate(time.Second),
-		Output:       os.Stdout,
-		// TODO - add Delete option
+		Client:              transfer.NewJob(project, service),
+		Project:             project,
+		SourceBucket:        sourceBucket,
+		TargetBucket:        destBucket,
+		Prefixes:            prefixes,
+		StartTime:           startTime,
+		AfterDate:           afterDate.Time,
+		MinFileAge:          minAge.Truncate(time.Second),
+		MaxFileAge:          maxAge.Truncate(time.Second),
+		DeleteAfterTransfer: deleteAfterTransfer,
+		Output:              os.Stdout,
 	}
 
 	op := mustArg(0)
