@@ -33,6 +33,7 @@ steps:
              '-include=neubot',
              '-include=utilization',
              '-include=wehe',
+             '-deleteAfterTransfer=true',
              'sync'
   ]
 
@@ -71,6 +72,7 @@ steps:
              '-include=neubot',
              '-include=utilization',
              '-include=wehe',
+             '-deleteAfterTransfer=true',
              'sync'
   ]
 
