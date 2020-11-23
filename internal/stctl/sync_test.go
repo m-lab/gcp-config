@@ -18,10 +18,12 @@ var getDesc = stctl.GetDesc
 func TestCommand_Sync(t *testing.T) {
 	ts := time.Now().UTC()
 	tests := []struct {
-		name     string
-		c        *Command
-		expected *storagetransfer.TransferJob
-		wantErr  bool
+		name        string
+		c           *Command
+		expected    *storagetransfer.TransferJob
+		wantErr     bool
+		shouldFind  bool // The specified job should be found in the client
+		shouldMatch bool // The specified job should match the existing job.
 	}{
 		{
 			name: "success-job-found-specs-match",
@@ -51,18 +53,24 @@ func TestCommand_Sync(t *testing.T) {
 										MaxTimeElapsedSinceLastModification: "432000s",
 										MinTimeElapsedSinceLastModification: "3600s",
 									},
+									TransferOptions: &storagetransfer.TransferOptions{
+										DeleteObjectsFromSourceAfterTransfer: true,
+									},
 								},
 							},
 						},
 					},
 				},
-				SourceBucket: "fake-source",
-				TargetBucket: "fake-target",
-				Prefixes:     []string{"a", "b"},
-				StartTime:    flagx.Time{Hour: 1, Minute: 2, Second: 3},
-				MaxFileAge:   5 * 24 * time.Hour,
-				MinFileAge:   time.Hour,
+				SourceBucket:        "fake-source",
+				TargetBucket:        "fake-target",
+				Prefixes:            []string{"a", "b"},
+				StartTime:           flagx.Time{Hour: 1, Minute: 2, Second: 3},
+				MaxFileAge:          5 * 24 * time.Hour,
+				MinFileAge:          time.Hour,
+				DeleteAfterTransfer: true,
 			},
+			shouldFind:  true,
+			shouldMatch: true,
 			expected: &storagetransfer.TransferJob{
 				Description: "STCTL: transfer fake-source -> fake-target at 01:02:03",
 				Name:        "transferOperations/description-matches-gcs-buckets",
@@ -76,6 +84,9 @@ func TestCommand_Sync(t *testing.T) {
 						IncludePrefixes:                     []string{"a", "b"},
 						MaxTimeElapsedSinceLastModification: "432000s",
 						MinTimeElapsedSinceLastModification: "3600s",
+					},
+					TransferOptions: &storagetransfer.TransferOptions{
+						DeleteObjectsFromSourceAfterTransfer: true,
 					},
 				},
 			},
@@ -110,6 +121,109 @@ func TestCommand_Sync(t *testing.T) {
 					job: &storagetransfer.TransferJob{},
 				},
 			},
+			shouldFind: true,
+			expected: &storagetransfer.TransferJob{
+				Description: "STCTL: transfer fake-source -> fake-target at 01:02:03",
+				Name:        "THIS-IS-A-FAKE-ASSIGNED-JOB-NAME",
+				Schedule: &storagetransfer.Schedule{
+					StartTimeOfDay: &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
+					ScheduleStartDate: &storagetransfer.Date{
+						Day:   int64(ts.Day()),
+						Month: int64(ts.Month()),
+						Year:  int64(ts.Year()),
+					},
+				},
+				TransferSpec: &storagetransfer.TransferSpec{
+					GcsDataSource: &storagetransfer.GcsData{BucketName: "fake-source"},
+					GcsDataSink:   &storagetransfer.GcsData{BucketName: "fake-target"},
+					ObjectConditions: &storagetransfer.ObjectConditions{
+						IncludePrefixes: []string{"a", "b"},
+					},
+				},
+				Status: "ENABLED",
+			},
+		},
+		{
+			name: "success-delete-mismatch-disable-and-create",
+			c: &Command{
+				SourceBucket:        "fake-source",
+				TargetBucket:        "fake-target",
+				StartTime:           flagx.Time{Hour: 1, Minute: 2, Second: 3},
+				DeleteAfterTransfer: true,
+				Client: &fakeTJ{
+					// fake jobs that are listed to search for one that matches the current Command spec.
+					listJobResp: &storagetransfer.ListTransferJobsResponse{
+						TransferJobs: []*storagetransfer.TransferJob{
+							{
+								Name:        "transferOperations/description-matches-delete-option-does-not",
+								Description: getDesc("fake-source", "fake-target", flagx.Time{Hour: 1, Minute: 2, Second: 3}),
+								Schedule: &storagetransfer.Schedule{
+									ScheduleEndDate: nil,
+									StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
+								},
+								TransferSpec: &storagetransfer.TransferSpec{
+									GcsDataSource: &storagetransfer.GcsData{BucketName: "fake-source"},
+									GcsDataSink:   &storagetransfer.GcsData{BucketName: "fake-target"},
+								},
+							},
+						},
+					},
+					// a fake job that is disabled.
+					job: &storagetransfer.TransferJob{},
+				},
+			},
+			shouldFind: true,
+			expected: &storagetransfer.TransferJob{
+				Description: "STCTL: transfer fake-source -> fake-target at 01:02:03",
+				Name:        "THIS-IS-A-FAKE-ASSIGNED-JOB-NAME",
+				Schedule: &storagetransfer.Schedule{
+					StartTimeOfDay: &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
+					ScheduleStartDate: &storagetransfer.Date{
+						Day:   int64(ts.Day()),
+						Month: int64(ts.Month()),
+						Year:  int64(ts.Year()),
+					},
+				},
+				TransferSpec: &storagetransfer.TransferSpec{
+					GcsDataSource: &storagetransfer.GcsData{BucketName: "fake-source"},
+					GcsDataSink:   &storagetransfer.GcsData{BucketName: "fake-target"},
+					TransferOptions: &storagetransfer.TransferOptions{
+						DeleteObjectsFromSourceAfterTransfer: true,
+					},
+				},
+				Status: "ENABLED",
+			},
+		},
+		{
+			name: "success-nil-object-cond-disable-and-create",
+			c: &Command{
+				SourceBucket: "fake-source",
+				TargetBucket: "fake-target",
+				Prefixes:     []string{"a", "b"},
+				StartTime:    flagx.Time{Hour: 1, Minute: 2, Second: 3},
+				Client: &fakeTJ{
+					// fake jobs that are listed to search for one that matches the current Command spec.
+					listJobResp: &storagetransfer.ListTransferJobsResponse{
+						TransferJobs: []*storagetransfer.TransferJob{
+							{
+								Name:        "transferOperations/nil-object-cond",
+								Description: getDesc("fake-source", "fake-target", flagx.Time{Hour: 1, Minute: 2, Second: 3}),
+								Schedule: &storagetransfer.Schedule{
+									ScheduleEndDate: nil,
+									StartTimeOfDay:  &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
+								},
+								TransferSpec: &storagetransfer.TransferSpec{
+									GcsDataSource: &storagetransfer.GcsData{BucketName: "fake-source"},
+									GcsDataSink:   &storagetransfer.GcsData{BucketName: "fake-target"},
+								},
+							},
+						},
+					},
+					// a fake job that is disabled.
+					job: &storagetransfer.TransferJob{},
+				},
+			},
+			shouldFind: true,
 			expected: &storagetransfer.TransferJob{
 				Description: "STCTL: transfer fake-source -> fake-target at 01:02:03",
 				Name:        "THIS-IS-A-FAKE-ASSIGNED-JOB-NAME",
@@ -197,7 +311,8 @@ func TestCommand_Sync(t *testing.T) {
 					getErr: errors.New("fake get error causes Disable() to fail"),
 				},
 			},
-			wantErr: true,
+			shouldFind: true,
+			wantErr:    true,
 		},
 		{
 			name: "error-found-and-disable-error-different-start-times",
@@ -220,14 +335,29 @@ func TestCommand_Sync(t *testing.T) {
 					getErr: errors.New("fake get error causes Disable() to fail"),
 				},
 			},
-			// With true  wantErr, Schedule can be empty, and TransferSpec is not needed.
+			// With true wantErr, Schedule can be empty, and TransferSpec is not needed.
 			// This does not impact test coverage.
-			wantErr: true,
+			wantErr:    true,
+			shouldFind: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
+			found, err := stctl.Find(tt.c, ctx)
+			if !tt.wantErr && err != stctl.ErrNotFound && err != nil {
+				t.Errorf("Command.Sync() error = %v", err)
+			}
+			if (found != nil) != tt.shouldFind {
+				t.Errorf("Command.Sync() found = %v, shouldFind = %v", found, tt.shouldFind)
+			}
+			if found != nil {
+				matches := stctl.SpecMatches(tt.c, found)
+				if matches != tt.shouldMatch {
+					t.Errorf("Command.Sync() matches = %v, shouldMatch = %v", matches, tt.shouldMatch)
+				}
+			}
+
 			job, err := tt.c.Sync(ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Command.Sync() error = %v, wantErr %v", err, tt.wantErr)

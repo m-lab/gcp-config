@@ -105,6 +105,9 @@ func TestCommand_ListJobs(t *testing.T) {
 									ObjectConditions: &storagetransfer.ObjectConditions{
 										IncludePrefixes: []string{"a", "b"},
 									},
+									TransferOptions: &storagetransfer.TransferOptions{
+										DeleteObjectsFromSourceAfterTransfer: true,
+									},
 								},
 							},
 						},

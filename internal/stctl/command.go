@@ -42,16 +42,17 @@ type TransferJob interface {
 
 // Command executes stctl actions.
 type Command struct {
-	Client       TransferJob
-	Project      string
-	SourceBucket string
-	TargetBucket string
-	Prefixes     []string
-	StartTime    flagx.Time
-	AfterDate    time.Time
-	MinFileAge   time.Duration
-	MaxFileAge   time.Duration
-	Output       io.Writer
+	Client              TransferJob
+	Project             string
+	SourceBucket        string
+	TargetBucket        string
+	Prefixes            []string
+	StartTime           flagx.Time
+	AfterDate           time.Time
+	MinFileAge          time.Duration
+	MaxFileAge          time.Duration
+	DeleteAfterTransfer bool
+	Output              io.Writer
 }
 
 // ListJobs lists enabled transfer jobs.
@@ -106,6 +107,37 @@ func (c *Command) ListOperations(ctx context.Context, name string) error {
 		return nil
 	}
 	return c.Client.Operations(ctx, name, visit)
+}
+
+func (c *Command) getSpec() storagetransfer.TransferSpec {
+	spec := storagetransfer.TransferSpec{
+		GcsDataSource: &storagetransfer.GcsData{
+			BucketName: c.SourceBucket,
+		},
+		GcsDataSink: &storagetransfer.GcsData{
+			BucketName: c.TargetBucket,
+		},
+	}
+
+	cond := &storagetransfer.ObjectConditions{}
+	if c.Prefixes != nil {
+		cond.IncludePrefixes = c.Prefixes
+		spec.ObjectConditions = cond
+	}
+	if c.MaxFileAge > 0 {
+		cond.MaxTimeElapsedSinceLastModification = fmt.Sprintf("%.0fs", c.MaxFileAge.Seconds())
+		spec.ObjectConditions = cond
+	}
+	if c.MinFileAge > 0 {
+		cond.MinTimeElapsedSinceLastModification = fmt.Sprintf("%.0fs", c.MinFileAge.Seconds())
+		spec.ObjectConditions = cond
+	}
+	if c.DeleteAfterTransfer {
+		spec.TransferOptions = &storagetransfer.TransferOptions{
+			DeleteObjectsFromSourceAfterTransfer: true,
+		}
+	}
+	return spec
 }
 
 func fmtTime(t *storagetransfer.TimeOfDay) string {
