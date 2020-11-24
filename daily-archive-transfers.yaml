@@ -27,12 +27,13 @@ steps:
     'stctl', '-gcs.source=pusher-$PROJECT_ID',
              '-gcs.target=archive-$PROJECT_ID',
              '-time=02:30:00',
-             '-maxFileAge=27h',
+             '-maxFileAge=36h',
              '-include=ndt',
              '-include=host',
              '-include=neubot',
              '-include=utilization',
              '-include=wehe',
+             '-deleteAfterTransfer=true',
              'sync'
   ]
 
@@ -71,6 +72,7 @@ steps:
              '-include=neubot',
              '-include=utilization',
              '-include=wehe',
+             '-deleteAfterTransfer=true',
              'sync'
   ]
 
