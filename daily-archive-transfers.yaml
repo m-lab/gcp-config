@@ -76,6 +76,21 @@ steps:
              'sync'
   ]
 
+# There are a few prefixes excluded from the primary transfers.
+# This moves those to other-mlab-*, and is delayed 6 hours to avoid competition.
+- name: gcp-config-cbif
+  env:
+  - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
+  args: [
+    'stctl', '-gcs.source=pusher-$PROJECT_ID',
+             '-gcs.target=other-$PROJECT_ID',
+             '-time=20:30:00',
+             '-include=revtr',
+             '-include=bismark',
+             '-deleteAfterTransfer=true',
+             'sync'
+  ]
+
 # 18:30:00 Configure daily local archive to public archive transfer.
 # For this one, maxFileAge is set to 8 days, to catch stragglers.
 # This likely means the calculating phase will take much longer.
