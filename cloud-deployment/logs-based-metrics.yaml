@@ -1,0 +1,20 @@
+resources:
+- name: platform-cluster-kernel-log-priorities
+  type: logging.v2.metric
+  properties:
+    description: Platform cluster kernel log message priorities
+    filter: |
+      resource.type="generic_node" resource.labels.location="mlab-sandbox" jsonPayload.SYSLOG_IDENTIFIER="kernel"
+    labelExtractors:
+      priority: EXTRACT(jsonPayload.PRIORITY)
+    metricDescriptor:
+      description: Platform cluster kernel log message priorities
+      labels:
+      - description: Priority
+        key: priority
+      metricKind: DELTA
+      name: platform-cluster-kernel-log-priorities
+      type: custom.googleapis.com/logs-based-metrics/platform-cluster-kernel-log_priorities
+      unit: '1'
+      valueType: INT64
+    metric: platform-cluster-kernel-log-priorities
