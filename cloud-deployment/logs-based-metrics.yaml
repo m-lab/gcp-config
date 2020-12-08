@@ -4,7 +4,7 @@ resources:
   properties:
     description: Platform cluster kernel log message priorities
     filter: |
-      resource.type="generic_node" resource.labels.location="mlab-sandbox" jsonPayload.SYSLOG_IDENTIFIER="kernel"
+      resource.type="generic_node" jsonPayload.SYSLOG_IDENTIFIER="kernel"
     labelExtractors:
       priority: EXTRACT(jsonPayload.PRIORITY)
     metricDescriptor:
