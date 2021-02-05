@@ -6,7 +6,7 @@ RUN apt-get install -y unzip python3-pip git vim-nox make autoconf gcc mkisofs \
     isolinux bc texinfo libncurses-dev linux-source debootstrap gcc \
     strace cpio squashfs-tools curl lsb-release gawk rsync \
     mtools dosfstools syslinux syslinux-utils parted kpartx grub-efi \
-    linux-source golang xorriso
+    linux-source golang xorriso jq
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/go/bin
 ENV GOROOT /usr/lib/go
 RUN mkdir /go
