@@ -16,6 +16,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -43,8 +44,8 @@ var (
 )
 
 func init() {
-	flag.StringVar(&org, "org", "m-lab", "Github organization containing repos")
-	flag.StringVar(&repo, "repo", "", "Github source repo")
+	flag.StringVar(&org, "org", "m-lab", "Github organization containing repos (e.g. m-lab)")
+	flag.StringVar(&repo, "repo", "", "Github source repo (e.g. ndt-server)")
 	flag.StringVar(&project, "project", "mlab-sandbox", "GCP project name")
 	flag.Var(&projects, "projects", "A sequence of GCP project names")
 	flag.StringVar(&filename, "filename", "cloudbuild.yaml", "Name of the cloudbuild configuration to use")
@@ -118,6 +119,16 @@ func ignore409(err error) error {
 	return err
 }
 
+func eventDesc(g *cloudbuild.GitHubEventsConfig) string {
+	if g.Push.Branch != "" {
+		return "Push to branch"
+	}
+	if g.Push.Tag != "" {
+		return "Push new tag"
+	}
+	return "Unknown"
+}
+
 func main() {
 	flag.Parse()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
@@ -136,7 +147,28 @@ func main() {
 	op := mustArg(0)
 	switch op {
 	case "list":
-		log.Println("Listing build triggers")
+		/*
+			Name
+			Description
+			Repository
+			Event
+			Revision filter
+			Build configuration
+			Status
+		*/
+		err := cmd.List(ctx, project, func(tr *cloudbuild.ListBuildTriggersResponse) error {
+			for _, t := range tr.Triggers {
+				fmt.Println(
+					t.Name, t.Description, // t.Build.Source.RepoSource.RepoName, // t.Build.,
+					eventDesc(t.Github), t.Filename, t.Disabled,
+				)
+				// pretty.Print(t)
+			}
+			return nil
+		})
+		rtx.Must(err, "Failed to list triggers")
+	case "details":
+		log.Println("Listing detailed build triggers")
 		err := cmd.List(ctx, project, func(tr *cloudbuild.ListBuildTriggersResponse) error {
 			for _, t := range tr.Triggers {
 				pretty.Print(t)
