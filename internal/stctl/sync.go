@@ -58,6 +58,7 @@ func (c *Command) find(ctx context.Context) (*storagetransfer.TransferJob, error
 func (c *Command) Sync(ctx context.Context) (*storagetransfer.TransferJob, error) {
 	found, err := c.find(ctx)
 	if err != errNotFound && err != nil {
+		logx.Debug.Println("After find:", err)
 		return nil, err
 	}
 	if found != nil {
@@ -75,6 +76,7 @@ func (c *Command) Sync(ctx context.Context) (*storagetransfer.TransferJob, error
 		}
 	}
 	// Create new job matching the preferred spec.
+	logx.Debug.Println("Creating new job!")
 	return c.Create(ctx)
 }
 
