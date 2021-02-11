@@ -26,6 +26,7 @@ steps:
   args: [
     'stctl', '-gcs.source=pusher-$PROJECT_ID',
              '-gcs.target=archive-$PROJECT_ID',
+             '-logx.debug=true',
              '-time=02:30:00',
              '-maxFileAge=36h',
              '-include=ndt',
