@@ -3,6 +3,7 @@ package stctl
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/m-lab/go/flagx"
 	"github.com/m-lab/go/logx"
@@ -116,8 +117,8 @@ func (c *Command) specMatches(job *storagetransfer.TransferJob) bool {
 			return false
 		}
 	} else if !includesEqual(cond.IncludePrefixes, c.Prefixes) ||
-		c.MaxFileAge.String() != cond.MaxTimeElapsedSinceLastModification ||
-		c.MinFileAge.String() != cond.MinTimeElapsedSinceLastModification {
+		!compareTimes(c.MaxFileAge, cond.MaxTimeElapsedSinceLastModification) ||
+		!compareTimes(c.MinFileAge, cond.MinTimeElapsedSinceLastModification) {
 		logx.Debug.Println("spec includes not equal",
 			cond.IncludePrefixes, c.Prefixes,
 			cond.MaxTimeElapsedSinceLastModification, c.MaxFileAge.String(),
@@ -132,4 +133,10 @@ func (c *Command) specMatches(job *storagetransfer.TransferJob) bool {
 	}
 
 	return true
+}
+
+func compareTimes(age time.Duration, elapsed string) bool {
+	// Accept that an error parsing correctly means zero seconds.
+	d, _ := time.ParseDuration(elapsed)
+	return age == d
 }
