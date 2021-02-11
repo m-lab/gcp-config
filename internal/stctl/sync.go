@@ -113,8 +113,8 @@ func (c *Command) specMatches(job *storagetransfer.TransferJob) bool {
 			return false
 		}
 	} else if !includesEqual(cond.IncludePrefixes, c.Prefixes) ||
-		!compareTimes(c.MaxFileAge, cond.MaxTimeElapsedSinceLastModification) ||
-		!compareTimes(c.MinFileAge, cond.MinTimeElapsedSinceLastModification) {
+		!durationsMatch(c.MaxFileAge, cond.MaxTimeElapsedSinceLastModification) ||
+		!durationsMatch(c.MinFileAge, cond.MinTimeElapsedSinceLastModification) {
 		logx.Debug.Println("spec: conditions not equal",
 			cond.IncludePrefixes, c.Prefixes,
 			cond.MaxTimeElapsedSinceLastModification, c.MaxFileAge.String(),
@@ -132,7 +132,7 @@ func (c *Command) specMatches(job *storagetransfer.TransferJob) bool {
 }
 
 // Convert the string based times from the ST API to numbers to make comparisons trivial.
-func compareTimes(age time.Duration, elapsed string) bool {
+func durationsMatch(age time.Duration, elapsed string) bool {
 	// Accept that an error parsing correctly means zero seconds.
 	d, _ := time.ParseDuration(elapsed)
 	return age == d
