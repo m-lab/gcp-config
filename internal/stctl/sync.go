@@ -35,14 +35,11 @@ func (c *Command) find(ctx context.Context) (*storagetransfer.TransferJob, error
 				continue
 			}
 			logx.Debug.Print(pretty.Sprint(job))
-			logx.Debug.Println("desc:", desc)
-			logx.Debug.Println("description:", job.Description)
 			if desc == job.Description {
 				// Sync depends on the convention for storage transfer job management that
 				// each job has a unique description, so the first
 				// matching job should be the only matching job.
 				found = job
-				logx.Debug.Println("Found job")
 				return nil
 			}
 		}
@@ -62,7 +59,6 @@ func (c *Command) find(ctx context.Context) (*storagetransfer.TransferJob, error
 func (c *Command) Sync(ctx context.Context) (*storagetransfer.TransferJob, error) {
 	found, err := c.find(ctx)
 	if err != errNotFound && err != nil {
-		logx.Debug.Println("After find:", err)
 		return nil, err
 	}
 	if found != nil {
@@ -107,19 +103,19 @@ func includesEqual(configured []string, desired []string) bool {
 func (c *Command) specMatches(job *storagetransfer.TransferJob) bool {
 	if job.Schedule.StartTimeOfDay == nil ||
 		!timesEqual(job.Schedule.StartTimeOfDay, c.StartTime) {
-		logx.Debug.Println("spec times not equal", job.Schedule, c.StartTime)
+		logx.Debug.Println("spec: times not equal", job.Schedule, c.StartTime)
 		return false
 	}
 	cond := job.TransferSpec.ObjectConditions
 	if cond == nil {
 		if len(c.Prefixes) > 0 || c.MaxFileAge > 0 || c.MinFileAge > 0 {
-			logx.Debug.Println("spec conditions not equal", cond, c.Prefixes, c.MaxFileAge, c.MinFileAge)
+			logx.Debug.Println("spec: conditions not equal", cond, c.Prefixes, c.MaxFileAge, c.MinFileAge)
 			return false
 		}
 	} else if !includesEqual(cond.IncludePrefixes, c.Prefixes) ||
 		!compareTimes(c.MaxFileAge, cond.MaxTimeElapsedSinceLastModification) ||
 		!compareTimes(c.MinFileAge, cond.MinTimeElapsedSinceLastModification) {
-		logx.Debug.Println("spec includes not equal",
+		logx.Debug.Println("spec: conditions not equal",
 			cond.IncludePrefixes, c.Prefixes,
 			cond.MaxTimeElapsedSinceLastModification, c.MaxFileAge.String(),
 			cond.MinTimeElapsedSinceLastModification, c.MinFileAge.String())
@@ -128,13 +124,14 @@ func (c *Command) specMatches(job *storagetransfer.TransferJob) bool {
 
 	jobDeleteOption := job.TransferSpec.TransferOptions != nil && job.TransferSpec.TransferOptions.DeleteObjectsFromSourceAfterTransfer
 	if c.DeleteAfterTransfer != jobDeleteOption {
-		logx.Debug.Println("spec delete after transfer not equal", jobDeleteOption, c.DeleteAfterTransfer)
+		logx.Debug.Println("spec: delete after transfer not equal", jobDeleteOption, c.DeleteAfterTransfer)
 		return false
 	}
 
 	return true
 }
 
+// Convert the string based times from the ST API to numbers to make comparisons trivial.
 func compareTimes(age time.Duration, elapsed string) bool {
 	// Accept that an error parsing correctly means zero seconds.
 	d, _ := time.ParseDuration(elapsed)
