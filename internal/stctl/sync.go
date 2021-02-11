@@ -116,12 +116,12 @@ func (c *Command) specMatches(job *storagetransfer.TransferJob) bool {
 			return false
 		}
 	} else if !includesEqual(cond.IncludePrefixes, c.Prefixes) ||
-		fmt.Sprintf("%0.fs", c.MaxFileAge.Seconds()) != cond.MaxTimeElapsedSinceLastModification ||
-		fmt.Sprintf("%0.fs", c.MinFileAge.Seconds()) != cond.MinTimeElapsedSinceLastModification {
+		c.MaxFileAge.String() != cond.MaxTimeElapsedSinceLastModification ||
+		c.MinFileAge.String() != cond.MinTimeElapsedSinceLastModification {
 		logx.Debug.Println("spec includes not equal",
 			cond.IncludePrefixes, c.Prefixes,
-			cond.MaxTimeElapsedSinceLastModification, c.MaxFileAge,
-			cond.MinTimeElapsedSinceLastModification, c.MinFileAge)
+			cond.MaxTimeElapsedSinceLastModification, c.MaxFileAge.String(),
+			cond.MinTimeElapsedSinceLastModification, c.MinFileAge.String())
 		return false
 	}
 
