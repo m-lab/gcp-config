@@ -3,6 +3,7 @@ package stctl
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/m-lab/go/flagx"
 	"github.com/m-lab/go/logx"
@@ -75,6 +76,7 @@ func (c *Command) Sync(ctx context.Context) (*storagetransfer.TransferJob, error
 		}
 	}
 	// Create new job matching the preferred spec.
+	logx.Debug.Println("Creating new job!")
 	return c.Create(ctx)
 }
 
@@ -101,23 +103,37 @@ func includesEqual(configured []string, desired []string) bool {
 func (c *Command) specMatches(job *storagetransfer.TransferJob) bool {
 	if job.Schedule.StartTimeOfDay == nil ||
 		!timesEqual(job.Schedule.StartTimeOfDay, c.StartTime) {
+		logx.Debug.Println("spec: times not equal", job.Schedule, c.StartTime)
 		return false
 	}
 	cond := job.TransferSpec.ObjectConditions
 	if cond == nil {
 		if len(c.Prefixes) > 0 || c.MaxFileAge > 0 || c.MinFileAge > 0 {
+			logx.Debug.Println("spec: conditions not equal", cond, c.Prefixes, c.MaxFileAge, c.MinFileAge)
 			return false
 		}
 	} else if !includesEqual(cond.IncludePrefixes, c.Prefixes) ||
-		fmt.Sprintf("%0.fs", c.MaxFileAge.Seconds()) != cond.MaxTimeElapsedSinceLastModification ||
-		fmt.Sprintf("%0.fs", c.MinFileAge.Seconds()) != cond.MinTimeElapsedSinceLastModification {
+		!durationsMatch(c.MaxFileAge, cond.MaxTimeElapsedSinceLastModification) ||
+		!durationsMatch(c.MinFileAge, cond.MinTimeElapsedSinceLastModification) {
+		logx.Debug.Println("spec: conditions not equal",
+			cond.IncludePrefixes, c.Prefixes,
+			cond.MaxTimeElapsedSinceLastModification, c.MaxFileAge.String(),
+			cond.MinTimeElapsedSinceLastModification, c.MinFileAge.String())
 		return false
 	}
 
 	jobDeleteOption := job.TransferSpec.TransferOptions != nil && job.TransferSpec.TransferOptions.DeleteObjectsFromSourceAfterTransfer
 	if c.DeleteAfterTransfer != jobDeleteOption {
+		logx.Debug.Println("spec: delete after transfer not equal", jobDeleteOption, c.DeleteAfterTransfer)
 		return false
 	}
 
 	return true
+}
+
+// Convert the string based times from the ST API to numbers to make comparisons trivial.
+func durationsMatch(age time.Duration, elapsed string) bool {
+	// Accept that an error parsing correctly means zero seconds.
+	d, _ := time.ParseDuration(elapsed)
+	return age == d
 }
