@@ -34,11 +34,14 @@ func (c *Command) find(ctx context.Context) (*storagetransfer.TransferJob, error
 				continue
 			}
 			logx.Debug.Print(pretty.Sprint(job))
+			logx.Debug.Println("desc:", desc)
+			logx.Debug.Println("description:", job.Description)
 			if desc == job.Description {
 				// Sync depends on the convention for storage transfer job management that
 				// each job has a unique description, so the first
 				// matching job should be the only matching job.
 				found = job
+				logx.Debug.Println("Found job")
 				return nil
 			}
 		}
