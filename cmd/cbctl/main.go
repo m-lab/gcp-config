@@ -43,7 +43,37 @@ var (
 	projects flagx.StringArray
 )
 
+var usage = `
+NAME:
+  cbctl - cloud build control, to manage cloud build triggers.
+
+DESCRIPTION:
+
+  Multi-phase development and deployment strategies require similar
+  triggering rules across multiple projects. cbctl automates creating
+  "sandbox", "staging", and "production" build triggers for GitHub repos.
+
+  NOTE: you must manually add cloud build GitHub integration to a new
+  repository. *DO NOT* use that workflow to create a new trigger, or you will
+  have duplicate triggers.
+
+EXAMPLES:
+
+  # Create standard build triggers across three projects.
+  cbctl -org m-lab -repo example-repo \
+      -projects mlab-sandbox,mlab-staging,mlab-oti create-projects
+
+  # List triggers in mlab-sandbox project.
+  cbctl -project mlab-sandbox list
+
+USAGE:
+`
+
 func init() {
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), usage)
+		flag.PrintDefaults()
+	}
 	flag.StringVar(&org, "org", "m-lab", "Github organization containing repos (e.g. m-lab)")
 	flag.StringVar(&repo, "repo", "", "Github source repo (e.g. ndt-server)")
 	flag.StringVar(&project, "project", "mlab-sandbox", "GCP project name")
@@ -147,28 +177,21 @@ func main() {
 	op := mustArg(0)
 	switch op {
 	case "list":
-		/*
-			Name
-			Description
-			Repository
-			Event
-			Revision filter
-			Build configuration
-			Status
-		*/
+		// short description.
+		fmt.Printf("%-5s %-40s %-45s %s\n", "Enabled", "Name", "Description", "Filename")
 		err := cmd.List(ctx, project, func(tr *cloudbuild.ListBuildTriggersResponse) error {
 			for _, t := range tr.Triggers {
-				fmt.Println(
-					t.Name, t.Description, // t.Build.Source.RepoSource.RepoName, // t.Build.,
-					eventDesc(t.Github), t.Filename, t.Disabled,
+				fmt.Printf("%-5t %-40s %-45q %s\n",
+					!t.Disabled,
+					t.Name, t.Description,
+					t.Filename,
 				)
-				// pretty.Print(t)
 			}
 			return nil
 		})
 		rtx.Must(err, "Failed to list triggers")
 	case "details":
-		log.Println("Listing detailed build triggers")
+		// detailed description.
 		err := cmd.List(ctx, project, func(tr *cloudbuild.ListBuildTriggersResponse) error {
 			for _, t := range tr.Triggers {
 				pretty.Print(t)
