@@ -123,23 +123,9 @@ func newPushTrigger(org, repo, tag, branch, filename string) *cloudbuild.BuildTr
 	return bt
 }
 
-func newPRTrigger(org, repo, branch, filename string) *cloudbuild.BuildTrigger {
-	bt := &cloudbuild.BuildTrigger{
-		Name:        "pr-" + org + "-" + repo + "-trigger",
-		Description: formatDesc("", branch),
-		Filename:    filename,
-		Github: &cloudbuild.GitHubEventsConfig{
-			Name:  repo,
-			Owner: org,
-			PullRequest: &cloudbuild.PullRequestFilter{
-				Branch: branch,
-			},
-		},
-	}
-	return bt
-}
-
-func ignore409(err error) error {
+// A conflict error is returned when the build trigger already exists. We can
+// ignore this case.
+func ignoreConflict(err error) error {
 	if e, ok := err.(*googleapi.Error); ok {
 		if e.Code == http.StatusConflict {
 			return nil
@@ -218,7 +204,7 @@ func main() {
 			branch string
 		}{
 			{branch: "sandbox-.*"},
-			{branch: "master"},
+			{branch: "main"},
 			{tag: "v([0-9.]+)+"},
 		}
 		for i, opt := range opts {
@@ -228,7 +214,7 @@ func main() {
 			}
 			bt := newPushTrigger(org, repo, opt.tag, opt.branch, filename)
 			t, err := cmd.Create(ctx, projects[i], bt)
-			rtx.Must(ignore409(err), "Failed to create trigger")
+			rtx.Must(ignoreConflict(err), "Failed to create trigger")
 			pretty.Print(t)
 		}
 
