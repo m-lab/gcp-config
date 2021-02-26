@@ -11,3 +11,7 @@ CBIF adds conditional actions to Cloud Build configs (See [cmd/cbif/DESIGN.md][d
 ## STCTL
 
 STCTL manages storage transfer jobs, including declarative configurations.
+
+## CBCTL
+
+CBCTL helps manage cloud build triggers in GCP.
