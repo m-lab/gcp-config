@@ -24,6 +24,7 @@ import (
 
 	"github.com/m-lab/gcp-config/internal/cbctl"
 
+	"github.com/google/go-github/v35/github"
 	"github.com/m-lab/go/flagx"
 	"github.com/m-lab/go/rtx"
 	"github.com/stephen-soltesz/pretty"
@@ -34,13 +35,14 @@ import (
 )
 
 var (
-	org      string
-	repo     string
-	project  string
-	filename string
-	branch   string
-	tag      string
-	projects flagx.StringArray
+	org         string
+	repo        string
+	project     string
+	filename    string
+	branch      string
+	tag         string
+	projects    flagx.StringArray
+	triggerName string
 )
 
 var usage = `
@@ -81,6 +83,7 @@ func init() {
 	flag.StringVar(&filename, "filename", "cloudbuild.yaml", "Name of the cloudbuild configuration to use")
 	flag.StringVar(&branch, "branch", "", "Pattern to match branches for this trigger")
 	flag.StringVar(&tag, "tag", "", "Pattern to match tags for this trigger")
+	flag.StringVar(&triggerName, "trigger_name", "", "Name of build trigger to use")
 }
 
 func mustArg(n int) string {
@@ -105,10 +108,20 @@ func formatDesc(tag, branch string) string {
 	return d
 }
 
+func formatName(org, repo string) string {
+	return "push-" + org + "-" + repo + "-trigger"
+}
+
 func newPushTrigger(org, repo, tag, branch, filename string) *cloudbuild.BuildTrigger {
+	var name string
+	if triggerName != "" {
+		name = triggerName
+	} else {
+		name = formatName(org, repo)
+	}
 	bt := &cloudbuild.BuildTrigger{
 		// NOTE: trigger name depends only on the repo, so multiple projects use the same name.
-		Name:        "push-" + org + "-" + repo + "-trigger",
+		Name:        name,
 		Description: formatDesc(tag, branch),
 		Filename:    filename,
 		Github: &cloudbuild.GitHubEventsConfig{
@@ -143,6 +156,45 @@ func eventDesc(g *cloudbuild.GitHubEventsConfig) string {
 		return "Push new tag"
 	}
 	return "Unknown"
+}
+
+// githubGetLatestRelease returns the latest release tag for a Github
+// repository.
+func githubGetLatestRelease(org, repo string) string {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+
+	client := github.NewClient(nil)
+	r, _, err := client.Repositories.GetLatestRelease(ctx, org, repo)
+	rtx.Must(err, "Failed to get latest release for repo: %s", repo)
+
+	return *r.TagName
+}
+
+// githubGetDefaultBranch returns the name of the default branch for a Github
+// repository.
+func githubGetDefaultBranch(org, repo string) string {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+
+	client := github.NewClient(nil)
+	r, _, err := client.Repositories.Get(ctx, "m-lab", "epoxy-images")
+	rtx.Must(err, "Failed to get default branch for repo: %s", repo)
+
+	return *r.DefaultBranch
+}
+
+// getBuildTarget returns an appropriate repository build target for a
+// repository. In production (mlab-oti) this will be a release tag name, in
+// sandbox and staging it will be the default branch name for the repository.
+func getBuildTarget(project string) string {
+	var target string
+	if project == "mlab-oti" {
+		target = githubGetLatestRelease(org, repo)
+	} else {
+		target = githubGetDefaultBranch(org, repo)
+	}
+	return target
 }
 
 func main() {
@@ -187,7 +239,33 @@ func main() {
 		rtx.Must(err, "Failed to list triggers")
 
 	case "trigger":
-		log.Println("TODO: implement trigger")
+		var rs *cloudbuild.RepoSource
+
+		if repo == "" {
+			log.Fatalln("You must specify a repo (-repo flag) when using the 'trigger' operation")
+		}
+		t := getBuildTarget(project)
+		bt, err := cmd.Get(ctx, project, triggerName)
+		rtx.Must(err, "Failed to get BuildTrigger for trigger with name: %s", triggerName)
+
+		if project == "mlab-oti" {
+			rs = &cloudbuild.RepoSource{
+				ProjectId: project,
+				RepoName:  repo,
+				TagName:   t,
+			}
+			log.Printf("Triggering build for repo %s on tag %s in project %s", repo, t, project)
+		} else {
+			rs = &cloudbuild.RepoSource{
+				ProjectId:  project,
+				RepoName:   repo,
+				BranchName: t,
+			}
+			log.Printf("Triggering build for repo %s on branch %s in project %s", repo, t, project)
+		}
+
+		_, err = cmd.Run(ctx, project, bt.Id, rs)
+		rtx.Must(err, "Failed to run build trigger for repo '%s' with repository build target '%s' in project '%s'", repo, t, project)
 
 	case "create":
 		log.Println("Creating single trigger")

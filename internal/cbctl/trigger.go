@@ -18,7 +18,9 @@ package cbctl
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/m-lab/go/rtx"
 	"google.golang.org/api/cloudbuild/v1"
 )
 
@@ -45,4 +47,28 @@ func (t *Trigger) Create(ctx context.Context, project string, bt *cloudbuild.Bui
 func (t *Trigger) List(ctx context.Context, project string, visit func(tr *cloudbuild.ListBuildTriggersResponse) error) error {
 	c := t.service.Projects.Triggers.List(project)
 	return c.Pages(ctx, visit)
+}
+
+// Get searches all build triggers for a given project looking for one with a
+// name matching the passed name parameter. If one is found it returns the
+// corresponding BuildTrigger object, else an error.
+func (t *Trigger) Get(ctx context.Context, project string, name string) (*cloudbuild.BuildTrigger, error) {
+	var bt *cloudbuild.BuildTrigger
+	c := t.service.Projects.Triggers.List(project)
+	err := c.Pages(ctx, func(tr *cloudbuild.ListBuildTriggersResponse) error {
+		for _, t := range tr.Triggers {
+			if t.Name == name {
+				bt = t
+				return nil
+			}
+		}
+		return nil
+	})
+	rtx.Must(err, "Failed to iterate all build triggers for project %s", project)
+
+	if bt == (&cloudbuild.BuildTrigger{}) {
+		err = fmt.Errorf("Failed to find build trigger with name: %s", name)
+	}
+
+	return bt, err
 }
