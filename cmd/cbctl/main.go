@@ -178,7 +178,7 @@ func githubGetDefaultBranch(org, repo string) string {
 	defer cancel()
 
 	client := github.NewClient(nil)
-	r, _, err := client.Repositories.Get(ctx, "m-lab", "epoxy-images")
+	r, _, err := client.Repositories.Get(ctx, org, repo)
 	rtx.Must(err, "Failed to get default branch for repo: %s", repo)
 
 	return *r.DefaultBranch
