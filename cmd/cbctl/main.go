@@ -184,17 +184,24 @@ func githubGetDefaultBranch(org, repo string) string {
 	return *r.DefaultBranch
 }
 
-// getBuildTarget returns an appropriate repository build target for a
-// repository. In production (mlab-oti) this will be a release tag name, in
-// sandbox and staging it will be the default branch name for the repository.
-func getBuildTarget(project string) string {
-	var target string
-	if project == "mlab-oti" {
-		target = githubGetLatestRelease(org, repo)
-	} else {
-		target = githubGetDefaultBranch(org, repo)
+// getBuildTargetRef returns an appropriate target reference (tag/branch) for a
+// repository. In production (mlab-oti) this will always be a release tag name, in
+// staging it will always be the default branch name for the repository, and in
+// sandbox it will be whatever branch name was passed in via the -branch flag.
+func getBuildTargetRef(project string) string {
+	var ref string
+	switch project {
+	case "mlab-oti":
+		ref = githubGetLatestRelease(org, repo)
+	case "mlab-staging":
+		ref = githubGetDefaultBranch(org, repo)
+	default:
+		if branch == "" {
+			log.Fatalf("Branch must be specified when triggering a build in project: %s", project)
+		}
+		ref = branch
 	}
-	return target
+	return ref
 }
 
 func main() {
@@ -244,28 +251,29 @@ func main() {
 		if repo == "" {
 			log.Fatalln("You must specify a repo (-repo flag) when using the 'trigger' operation")
 		}
-		t := getBuildTarget(project)
+
 		bt, err := cmd.Get(ctx, project, triggerName)
 		rtx.Must(err, "Failed to get BuildTrigger for trigger with name: %s", triggerName)
 
+		ref := getBuildTargetRef(project)
 		if project == "mlab-oti" {
 			rs = &cloudbuild.RepoSource{
 				ProjectId: project,
 				RepoName:  repo,
-				TagName:   t,
+				TagName:   ref,
 			}
-			log.Printf("Triggering build for repo %s on tag %s in project %s", repo, t, project)
+			log.Printf("Triggering build for repo %s on tag %s in project %s", repo, ref, project)
 		} else {
 			rs = &cloudbuild.RepoSource{
 				ProjectId:  project,
 				RepoName:   repo,
-				BranchName: t,
+				BranchName: ref,
 			}
-			log.Printf("Triggering build for repo %s on branch %s in project %s", repo, t, project)
+			log.Printf("Triggering build for repo %s on branch %s in project %s", repo, ref, project)
 		}
 
 		_, err = cmd.Run(ctx, project, bt.Id, rs)
-		rtx.Must(err, "Failed to run build trigger for repo '%s' with repository build target '%s' in project '%s'", repo, t, project)
+		rtx.Must(err, "Failed to run build trigger for repo '%s' with repository build target '%s' in project '%s'", repo, ref, project)
 
 	case "create":
 		log.Println("Creating single trigger")
