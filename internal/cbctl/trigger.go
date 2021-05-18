@@ -59,7 +59,7 @@ func (t *Trigger) List(ctx context.Context, project string, visit func(tr *cloud
 	return c.Pages(ctx, visit)
 }
 
-// Get searches all build triggers for a given project looking for one with a
+// Get searches all build triggers in a given project looking for one with a
 // name matching the passed name parameter. If one is found it returns the
 // corresponding BuildTrigger object, else an error.
 func (t *Trigger) Get(ctx context.Context, project string, name string) (*cloudbuild.BuildTrigger, error) {
