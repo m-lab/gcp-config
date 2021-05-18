@@ -52,7 +52,7 @@ func (j *Job) Jobs(ctx context.Context, visit func(resp *storagetransfer.ListTra
 		Statuses: []string{"ENABLED"},
 	}
 	bfilter, _ := json.Marshal(&f)
-	list := j.service.TransferJobs.List().PageSize(20).Filter(string(bfilter))
+	list := j.service.TransferJobs.List(string(bfilter)).PageSize(20)
 	return list.Pages(ctx, visit)
 }
 
@@ -63,7 +63,7 @@ func (j *Job) Create(ctx context.Context, create *storagetransfer.TransferJob) (
 
 // Get retrieves the named transfer job.
 func (j *Job) Get(ctx context.Context, name string) (*storagetransfer.TransferJob, error) {
-	return j.service.TransferJobs.Get(name).ProjectId(j.project).Context(ctx).Do()
+	return j.service.TransferJobs.Get(name, j.project).Context(ctx).Do()
 }
 
 // Update updates the named transfer job with the given configuration.
@@ -78,5 +78,5 @@ func (j *Job) Operations(ctx context.Context, name string, visit func(r *storage
 		Names:   []string{name},
 	}
 	bfilter, _ := json.Marshal(&f)
-	return j.service.TransferOperations.List("transferOperations").Filter(string(bfilter)).Pages(ctx, visit)
+	return j.service.TransferOperations.List("transferOperations", string(bfilter)).Pages(ctx, visit)
 }
