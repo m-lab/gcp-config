@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/go-github/v35/github"
 	"google.golang.org/api/cloudbuild/v1"
 )
 
@@ -33,16 +32,6 @@ type Trigger struct {
 func NewTrigger(s *cloudbuild.Service) *Trigger {
 	return &Trigger{
 		service: s,
-	}
-}
-
-type Github struct {
-	Client *github.Client
-}
-
-func NewGithub(c *github.Client) *Github {
-	return &Github{
-		Client: c,
 	}
 }
 

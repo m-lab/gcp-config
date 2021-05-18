@@ -160,11 +160,8 @@ func eventDesc(g *cloudbuild.GitHubEventsConfig) string {
 
 // githubGetLatestRelease returns the latest release tag for a Github
 // repository.
-func githubGetLatestRelease(gh *cbctl.Github, org, repo string) string {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-	defer cancel()
-
-	r, _, err := gh.Client.Repositories.GetLatestRelease(ctx, org, repo)
+func githubGetLatestRelease(ctx context.Context, gh *github.Client, org, repo string) string {
+	r, _, err := gh.Repositories.GetLatestRelease(ctx, org, repo)
 	rtx.Must(err, "Failed to get latest release for repo: %s", repo)
 
 	return *r.TagName
@@ -172,11 +169,8 @@ func githubGetLatestRelease(gh *cbctl.Github, org, repo string) string {
 
 // githubGetDefaultBranch returns the name of the default branch for a Github
 // repository.
-func githubGetDefaultBranch(gh *cbctl.Github, org, repo string) string {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-	defer cancel()
-
-	r, _, err := gh.Client.Repositories.Get(ctx, org, repo)
+func githubGetDefaultBranch(ctx context.Context, gh *github.Client, org, repo string) string {
+	r, _, err := gh.Repositories.Get(ctx, org, repo)
 	rtx.Must(err, "Failed to get default branch for repo: %s", repo)
 
 	return *r.DefaultBranch
@@ -186,13 +180,13 @@ func githubGetDefaultBranch(gh *cbctl.Github, org, repo string) string {
 // repository. In production (mlab-oti) this will always be a release tag name, in
 // staging it will always be the default branch name for the repository, and in
 // sandbox it will be whatever branch name was passed in via the -branch flag.
-func getBuildTargetRef(gh *cbctl.Github, project string) string {
+func getBuildTargetRef(ctx context.Context, gh *github.Client, project string) string {
 	var ref string
 	switch project {
 	case "mlab-oti":
-		ref = githubGetLatestRelease(gh, org, repo)
+		ref = githubGetLatestRelease(ctx, gh, org, repo)
 	case "mlab-staging":
-		ref = githubGetDefaultBranch(gh, org, repo)
+		ref = githubGetDefaultBranch(ctx, gh, org, repo)
 	default:
 		if branch == "" {
 			log.Fatalf("Branch must be specified when triggering a build in project: %s", project)
@@ -256,10 +250,9 @@ func main() {
 		bt, err := cmd.Get(ctx, project, triggerName)
 		rtx.Must(err, "Failed to get BuildTrigger")
 
-		c := github.NewClient(nil)
-		gh := cbctl.NewGithub(c)
+		ghClient := github.NewClient(nil)
 
-		ref := getBuildTargetRef(gh, project)
+		ref := getBuildTargetRef(ctx, ghClient, project)
 		if project == "mlab-oti" {
 			rs = &cloudbuild.RepoSource{
 				ProjectId: project,
