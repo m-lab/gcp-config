@@ -1,8 +1,3 @@
 FROM golang:1.15
-# CGO_ENABLED=0 creates a statically linked binary.
-# The -ldflags drop another 2.5MB from the binary size.
-# -w    Omit the DWARF symbol table.
-# -s    Omit the symbol table and debug information.
-RUN CGO_ENABLED=0 go get -u -ldflags '-w -s' github.com/m-lab/epoxy/cmd/epoxy_admin
-RUN CGO_ENABLED=0 go get -u -ldflags '-w -s' github.com/m-lab/gcp-config/cmd/cbctl
-
+RUN go get github.com/m-lab/epoxy/cmd/epoxy_admin
+RUN go get github.com/m-lab/gcp-config/cmd/cbctl
