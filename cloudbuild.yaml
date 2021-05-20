@@ -1,3 +1,6 @@
+# Default total build time is 10m, which isn't always enough.
+timeout: 1800s
+
 ############################################################################
 # Create project-specific customized builder images.
 ############################################################################
