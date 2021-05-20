@@ -158,22 +158,21 @@ func eventDesc(g *cloudbuild.GitHubEventsConfig) string {
 	return "Unknown"
 }
 
-// githubGetLatestRelease returns the latest release tag for a Github
-// repository.
-func githubGetLatestRelease(ctx context.Context, gh *github.Client, org, repo string) string {
+// githubGetLatestRelease returns a *github.RepositoryRelease representing the
+// most recent release for the passed repo.
+func githubGetLatestRelease(ctx context.Context, gh *github.Client, org, repo string) *github.RepositoryRelease {
 	r, _, err := gh.Repositories.GetLatestRelease(ctx, org, repo)
 	rtx.Must(err, "Failed to get latest release for repo: %s", repo)
 
-	return *r.TagName
+	return r
 }
 
-// githubGetDefaultBranch returns the name of the default branch for a Github
-// repository.
-func githubGetDefaultBranch(ctx context.Context, gh *github.Client, org, repo string) string {
+// githubGetRepository returns a *github.Repository for the passed repo name.
+func githubGetRepository(ctx context.Context, gh *github.Client, org, repo string) *github.Repository {
 	r, _, err := gh.Repositories.Get(ctx, org, repo)
-	rtx.Must(err, "Failed to get default branch for repo: %s", repo)
+	rtx.Must(err, "Failed to get Repository for repo: %s", repo)
 
-	return *r.DefaultBranch
+	return r
 }
 
 // getBuildTargetRef returns an appropriate target reference (tag/branch) for a
@@ -184,9 +183,11 @@ func getBuildTargetRef(ctx context.Context, gh *github.Client, project string) s
 	var ref string
 	switch project {
 	case "mlab-oti":
-		ref = githubGetLatestRelease(ctx, gh, org, repo)
+		rel := githubGetLatestRelease(ctx, gh, org, repo)
+		ref = *rel.TagName
 	case "mlab-staging":
-		ref = githubGetDefaultBranch(ctx, gh, org, repo)
+		rep := githubGetRepository(ctx, gh, org, repo)
+		ref = *rep.DefaultBranch
 	default:
 		if branch == "" {
 			log.Fatalf("Branch must be specified when triggering a build in project: %s", project)
