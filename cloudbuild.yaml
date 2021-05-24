@@ -1,3 +1,6 @@
+# Default total build time is 10m, which isn't always enough.
+timeout: 1800s
+
 ############################################################################
 # Create project-specific customized builder images.
 ############################################################################
@@ -26,7 +29,16 @@ steps:
     '--file=Dockerfile.epoxy-images', '.'
   ]
 
+# Build siteinfo image
+- name: gcr.io/cloud-builders/docker
+  args: [
+    'build',
+    '--tag=gcr.io/$PROJECT_ID/siteinfo',
+    '--file=Dockerfile.siteinfo', '.'
+  ]
+
 images:
 - 'gcr.io/$PROJECT_ID/golang-cbif'
 - 'gcr.io/$PROJECT_ID/gcloud-jsonnet-cbif'
 - 'gcr.io/$PROJECT_ID/epoxy-images'
+- 'gcr.io/$PROJECT_ID/siteinfo'
