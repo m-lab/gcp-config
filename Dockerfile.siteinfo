@@ -1,3 +1,5 @@
 FROM golang:1.15
 RUN go get github.com/m-lab/epoxy/cmd/epoxy_admin
 RUN go get github.com/m-lab/gcp-config/cmd/cbctl
+RUN go get github.com/m-lab/gcp-config/cmd/cbif
+ENTRYPOINT ["/go/bin/cbif"]
