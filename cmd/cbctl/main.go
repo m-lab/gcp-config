@@ -29,6 +29,8 @@ import (
 	"github.com/m-lab/go/rtx"
 	"github.com/stephen-soltesz/pretty"
 
+	"golang.org/x/oauth2"
+
 	"google.golang.org/api/cloudbuild/v1"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
@@ -43,6 +45,7 @@ var (
 	tag         string
 	projects    flagx.StringArray
 	triggerName string
+	ghToken     string
 )
 
 var usage = `
@@ -84,6 +87,7 @@ func init() {
 	flag.StringVar(&branch, "branch", "", "Pattern to match branches for this trigger")
 	flag.StringVar(&tag, "tag", "", "Pattern to match tags for this trigger")
 	flag.StringVar(&triggerName, "trigger_name", "", "Name of build trigger to use")
+	flag.StringVar(&ghToken, "github_token", "", "Token for authenticating to the Github API")
 }
 
 func mustArg(n int) string {
@@ -240,6 +244,7 @@ func main() {
 
 	case "trigger":
 		var rs *cloudbuild.RepoSource
+		var ghClient *github.Client
 
 		if repo == "" {
 			log.Fatalln("You must specify a repo (-repo flag) when using the 'trigger' operation")
@@ -251,7 +256,15 @@ func main() {
 		bt, err := cmd.Get(ctx, project, triggerName)
 		rtx.Must(err, "Failed to get BuildTrigger")
 
-		ghClient := github.NewClient(nil)
+		if ghToken != "" {
+			tokenSource := oauth2.StaticTokenSource(
+				&oauth2.Token{AccessToken: ghToken},
+			)
+			ghClient = github.NewClient(oauth2.NewClient(ctx, tokenSource))
+
+		} else {
+			ghClient = github.NewClient(nil)
+		}
 
 		ref := getBuildTargetRef(ctx, ghClient, project)
 		if project == "mlab-oti" {
