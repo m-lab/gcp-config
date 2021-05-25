@@ -29,11 +29,11 @@ steps:
     '--file=Dockerfile.epoxy-images', '.'
   ]
 
-# Build siteinfo image
+# Build siteinfo-cbif image. Used by siteinto repository builds.
 - name: gcr.io/cloud-builders/docker
   args: [
     'build',
-    '--tag=gcr.io/$PROJECT_ID/siteinfo',
+    '--tag=gcr.io/$PROJECT_ID/siteinfo-cbif',
     '--file=Dockerfile.siteinfo', '.'
   ]
 
@@ -41,4 +41,4 @@ images:
 - 'gcr.io/$PROJECT_ID/golang-cbif'
 - 'gcr.io/$PROJECT_ID/gcloud-jsonnet-cbif'
 - 'gcr.io/$PROJECT_ID/epoxy-images'
-- 'gcr.io/$PROJECT_ID/siteinfo'
+- 'gcr.io/$PROJECT_ID/siteinfo-cbif'
