@@ -203,8 +203,11 @@ func getBuildTargetRef(ctx context.Context, gh *github.Client, project string) s
 
 func main() {
 	flag.Parse()
+	rtx.Must(flagx.ArgsFromEnvWithLog(flag.CommandLine, false), "Could not parse env args")
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
+
 	s, err := cloudbuild.NewService(ctx, option.WithScopes(cloudbuild.CloudPlatformScope))
 	rtx.Must(err, "Failed to create cb service")
 
