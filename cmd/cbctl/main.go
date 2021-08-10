@@ -24,7 +24,7 @@ import (
 
 	"github.com/m-lab/gcp-config/internal/cbctl"
 
-	"github.com/google/go-github/v35/github"
+	"github.com/google/go-github/v37/github"
 	"github.com/m-lab/go/flagx"
 	"github.com/m-lab/go/rtx"
 	"github.com/stephen-soltesz/pretty"
