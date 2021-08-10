@@ -50,17 +50,30 @@ var (
 
 var usage = `
 NAME:
-  cbctl - cloud build control, to manage cloud build triggers.
+  cbctl - cloud build control, to manage and run cloud build triggers.
 
 DESCRIPTION:
 
   Multi-phase development and deployment strategies require similar
-  triggering rules across multiple projects. cbctl automates creating
-  "sandbox", "staging", and "production" build triggers for GitHub repos.
+  triggering rules across multiple projects. Among other things, cbctl automates
+  creating "sandbox", "staging", and "production" build triggers for GitHub
+  repos.
 
   NOTE: you must manually add cloud build GitHub integration to a new
   repository. *DO NOT* use that workflow to create a new trigger, or you will
   have duplicate triggers.
+
+  Basic usage:
+
+  cbctl <flags> <operation>
+
+  Supported operations:
+
+  * create: create a trigger in one project only
+  * create-projects: creates a standard trigger in all projects
+  * details: show detailed information about every trigger in a project
+  * list: a basic list of all triggers in a project
+  * trigger: triggers a build
 
 EXAMPLES:
 
@@ -70,6 +83,16 @@ EXAMPLES:
 
   # List triggers in mlab-sandbox project.
   cbctl -project mlab-sandbox list
+
+  # Trigger a build. NOTE: in the mlab-sandbox project you _must_ specify the
+  # -branch flag. In mlab-staging and mlab-oti, you have no control over the
+  # build ref that gets used for the build. In mlab-staging the build ref will
+  # always be HEAD of the default branch (usually "main" or "master"). In
+  # mlab-oti, the build ref will always be the most recent release tag for the
+  # repo. For example:
+  cbctl -project mlab-sandbox -repo some-repo -branch sandbox-fix-bug trigger
+  cbctl -project mlab-staging -repo some-repo trigger
+  cbctl -project mlab-oti -repo some-repo trigger
 
 USAGE:
 `
