@@ -65,7 +65,7 @@ DESCRIPTION:
 
   Basic usage:
 
-  cbtctl <flags> <operation>
+  cbctl <flags> <operation>
 
   Supported operations:
 
