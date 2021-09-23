@@ -6,7 +6,7 @@ RUN apt-get install -y unzip python3-pip git vim-nox make autoconf gcc mkisofs \
     isolinux bc texinfo libncurses-dev linux-source debootstrap gcc \
     strace cpio squashfs-tools curl lsb-release gawk rsync \
     mtools dosfstools syslinux syslinux-utils parted kpartx grub-efi \
-    linux-source golang xorriso jq
+    linux-source golang-1.16 xorriso jq
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/go/bin
 ENV GOROOT /usr/lib/go
 RUN mkdir /go
@@ -15,5 +15,5 @@ ENV GOPATH /go
 # The -ldflags drop another 2.5MB from the binary size.
 # -w    Omit the DWARF symbol table.
 # -s    Omit the symbol table and debug information.
-RUN CGO_ENABLED=0 go get -u -ldflags '-w -s' github.com/m-lab/epoxy/cmd/epoxy_client
+RUN CGO_ENABLED=0 GO111MODULE=auto go get -u -ldflags '-w -s' github.com/m-lab/epoxy/cmd/epoxy_client
 
