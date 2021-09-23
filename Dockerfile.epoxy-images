@@ -10,7 +10,7 @@ RUN apt-get install -y unzip python3-pip git vim-nox make autoconf gcc mkisofs \
 # Adds go-1.16 binary to a known location in $PATH
 RUN update-alternatives --install /usr/local/bin/go go /usr/lib/go-1.16/bin/go 10
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/go/bin
-ENV GOROOT /usr/lib/go
+ENV GOROOT /usr/lib/go-1.16
 RUN mkdir /go
 ENV GOPATH /go
 # CGO_ENABLED=0 creates a statically linked binary.
