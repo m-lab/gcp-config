@@ -84,7 +84,15 @@ for year in 2019 2020 ; do
 done
 
 for year in 2019 2020 2021 ; do
-  safe_rsync gs://${archive}/ndt/traceroute/${year} gs://${archive}/ndt/scamper1/${year}/
+  safe_rsync gs://${archive}/ndt/traceroute/${year}/ gs://${archive}/ndt/scamper1/${year}/
+done
+
+for year in 2019 2020 2021 ; do
+  safe_rsync gs://${archive}/host/traceroute/${year}/ gs://${archive}/host/scamper1/${year}/
+done
+
+for year in 2019 2020 2021 ; do
+  safe_rsync gs://${archive}/neubot/traceroute/${year}/ gs://${archive}/neubot/scamper1/${year}/
 done
 
 # Delete exits to proceed to remove legacy folders.
