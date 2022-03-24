@@ -123,10 +123,3 @@ for year in 2019 2020 ; do
   time gsutil -m rm -r gs://${archive}/ndt/ndt7/upload/${year}/
   time gsutil -m rm -r gs://${archive}/ndt/ndt7/download/${year}/
 done
-
-# ndt/host/neubot traceroute.
-for year in 2019 2020 2021 ; do
-  time gsutil -m rm -r gs://${archive}/ndt/traceroute/${year}/
-  time gsutil -m rm -r gs://${archive}/host/traceroute/${year}/
-  time gsutil -m rm -r gs://${archive}/neubot/traceroute/${year}/
-done
