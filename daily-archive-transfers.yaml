@@ -37,6 +37,22 @@ steps:
              'sync'
   ]
 
+# 02:30:00 Configure daily transfer from thirdparty-revtr to public archive.
+# NOTE: this transfer only includes files under the revtr/ top level
+# directory and is scheduled to allow pusher time to upload all files from
+# previous day.
+- name: gcp-config-cbif
+  env:
+  - PROJECT_IN=measurement-lab
+  args: [
+    'stctl', '-gcs.source=thirdparty-revtr-mlab-oti',
+             '-gcs.target=archive-measurement-lab',
+             '-include=revtr',
+             '-time=02:30:00',
+             '-maxFileAge=27h',
+             'sync'
+  ]
+
 # 06:30:00 Configure daily local archive to public archive transfer.
 # NOTE: this transfer is 4 hours after the previous transfer based on recent
 # GCS ST jobs (2020-07-15).
