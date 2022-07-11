@@ -1,6 +1,8 @@
 # Default total build time is 10m, which isn't always enough.
 timeout: 1800s
+
 options:
+  # Allow images to build more quickly.
   machineType: 'N1_HIGHCPU_8'
 
 ############################################################################
