@@ -9,7 +9,7 @@ steps:
 # Build golang-cbif container. Useful golang builds and tests.
 - name: gcr.io/cloud-builders/docker
   args: [
-    'build', '--tag=gcr.io/$PROJECT_ID/golang-cbif',
+    'build', '--tag=gcr.io/$PROJECT_ID/golang-cbif:1.18',
     '--file=Dockerfile.golang', '.'
   ]
 
@@ -17,9 +17,10 @@ steps:
 - name: gcr.io/cloud-builders/docker
   args: [
     'build',
-    '--tag=gcr.io/$PROJECT_ID/gcloud-jsonnet-cbif',
+    '--tag=gcr.io/$PROJECT_ID/gcloud-jsonnet-cbif:1.18',
     '--file=Dockerfile.jsonnet', '.'
   ]
+  waitFor: ['-']
 
 # Build epoxy-images image
 - name: gcr.io/cloud-builders/docker
@@ -28,6 +29,7 @@ steps:
     '--tag=gcr.io/$PROJECT_ID/epoxy-images',
     '--file=Dockerfile.epoxy-images', '.'
   ]
+  waitFor: ['-']
 
 # Build siteinfo-cbif image. Used by siteinto repository builds.
 - name: gcr.io/cloud-builders/docker
@@ -36,6 +38,7 @@ steps:
     '--tag=gcr.io/$PROJECT_ID/siteinfo-cbif',
     '--file=Dockerfile.siteinfo', '.'
   ]
+  waitFor: ['-']
 
 images:
 - 'gcr.io/$PROJECT_ID/golang-cbif:1.18'
