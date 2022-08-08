@@ -65,6 +65,7 @@ steps:
              '-gcs.target=archive-measurement-lab',
              '-time=06:30:00',
              '-maxFileAge=27h',
+             '-deleteAfterTransfer=true',
              'sync'
   ]
 
@@ -104,6 +105,7 @@ steps:
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
              '-time=18:30:00',
+             '-deleteAfterTransfer=true',
              '-maxFileAge=192h',  # 8 days
              'sync'
   ]
