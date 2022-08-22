@@ -57,12 +57,14 @@ DESCRIPTION:
   rules across multiple projects. Among other things, cbctl automates creating
   "sandbox", "staging", and "production" build triggers for GitHub repos.
 
-  NOTE: before this utility will work, you must [manually connect the Github
-  repository to Cloud
-  Build](https://cloud.google.com/build/docs/automating-builds/create-manage-triggers#connect_repo)
-  from the Cloud Build interface. The process of connecting a repository will
-  ask you if you want to create a trigger. **DO NOT** create a new trigger in
-  that workflow, or you will have duplicate triggers. That
+  NOTE: before this utility will work, you must manually connect the Github
+  repository to Cloud Build:
+
+  https://cloud.google.com/build/docs/automating-builds/create-manage-triggers#connect_repo
+
+  The process of connecting a repository will ask you if you want to create a
+  trigger. **DO NOT** create a new trigger in that workflow, or you will have
+  duplicate triggers.
 
   Basic usage:
 
