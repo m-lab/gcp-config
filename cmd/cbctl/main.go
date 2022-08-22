@@ -43,7 +43,6 @@ var (
 	filename    string
 	branch      string
 	tag         string
-	projects    flagx.StringArray
 	triggerName string
 	ghToken     string
 )
@@ -54,14 +53,16 @@ NAME:
 
 DESCRIPTION:
 
-  Multi-phase development and deployment strategies require similar
-  triggering rules across multiple projects. Among other things, cbctl automates
-  creating "sandbox", "staging", and "production" build triggers for GitHub
-  repos.
+  Multi-phase development and deployment strategies require similar triggering
+  rules across multiple projects. Among other things, cbctl automates creating
+  "sandbox", "staging", and "production" build triggers for GitHub repos.
 
-  NOTE: you must manually add cloud build GitHub integration to a new
-  repository. *DO NOT* use that workflow to create a new trigger, or you will
-  have duplicate triggers.
+  NOTE: before this utility will work, you must [manually connect the Github
+  repository to Cloud
+  Build](https://cloud.google.com/build/docs/automating-builds/create-manage-triggers#connect_repo)
+  from the Cloud Build interface. The process of connecting a repository will
+  ask you if you want to create a trigger. **DO NOT** create a new trigger in
+  that workflow, or you will have duplicate triggers. That
 
   Basic usage:
 
@@ -70,16 +71,16 @@ DESCRIPTION:
   Supported operations:
 
   * create: create a trigger in one project only
-  * create-projects: creates a standard trigger in all projects
+  * create-mlab-projects: creates a standard trigger in all M-Lab projects
   * details: show detailed information about every trigger in a project
   * list: a basic list of all triggers in a project
   * trigger: triggers a build
 
 EXAMPLES:
 
-  # Create standard build triggers across three projects.
-  cbctl -org m-lab -repo example-repo \
-      -projects mlab-sandbox,mlab-staging,mlab-oti create-projects
+  # Create standard build triggers across all three M-Lab projects. This
+  # operation is only suitable for use by M-Lab.
+  cbctl -org m-lab -repo example-repo create-mlab-projects
 
   # List triggers in mlab-sandbox project.
   cbctl -project mlab-sandbox list
@@ -99,13 +100,12 @@ USAGE:
 
 func init() {
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), usage)
+		fmt.Fprint(flag.CommandLine.Output(), usage)
 		flag.PrintDefaults()
 	}
 	flag.StringVar(&org, "org", "m-lab", "Github organization containing repos (e.g. m-lab)")
 	flag.StringVar(&repo, "repo", "", "Github source repo (e.g. ndt-server)")
 	flag.StringVar(&project, "project", "mlab-sandbox", "GCP project name")
-	flag.Var(&projects, "projects", "A sequence of GCP project names")
 	flag.StringVar(&filename, "filename", "cloudbuild.yaml", "Name of the cloudbuild configuration to use")
 	flag.StringVar(&branch, "branch", "", "Pattern to match branches for this trigger")
 	flag.StringVar(&tag, "tag", "", "Pattern to match tags for this trigger")
@@ -173,16 +173,6 @@ func ignoreConflict(err error) error {
 		pretty.Print(e)
 	}
 	return err
-}
-
-func eventDesc(g *cloudbuild.GitHubEventsConfig) string {
-	if g.Push.Branch != "" {
-		return "Push to branch"
-	}
-	if g.Push.Tag != "" {
-		return "Push new tag"
-	}
-	return "Unknown"
 }
 
 // githubGetLatestRelease returns a *github.RepositoryRelease representing the
@@ -319,24 +309,30 @@ func main() {
 		rtx.Must(err, "Failed to create trigger")
 		pretty.Print(t)
 
-	case "create-projects":
-		log.Println("Creating standard triggers across several projects")
+	case "create-mlab-projects":
+		log.Println("Creating standard triggers across all M-Lab projects")
 
 		opts := []struct {
-			tag    string
-			branch string
+			tag     string
+			branch  string
+			project string
 		}{
-			{branch: "sandbox-.*"},
-			{branch: "main"},
-			{tag: "v([0-9.]+)+"},
+			{
+				branch:  "^sandbox-.*",
+				project: "mlab-sandbox",
+			},
+			{
+				branch:  "^main$",
+				project: "mlab-staging",
+			},
+			{
+				tag:     "^v([0-9.]+)+",
+				project: "mlab-oti",
+			},
 		}
-		for i, opt := range opts {
-			if len(projects) < len(opts) {
-				log.Printf("Skipping: %#v", opt)
-				continue
-			}
+		for _, opt := range opts {
 			bt := newPushTrigger(org, repo, opt.tag, opt.branch, filename)
-			t, err := cmd.Create(ctx, projects[i], bt)
+			t, err := cmd.Create(ctx, opt.project, bt)
 			rtx.Must(ignoreConflict(err), "Failed to create trigger")
 			pretty.Print(t)
 		}
