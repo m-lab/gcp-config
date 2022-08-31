@@ -28,6 +28,5 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 # The -ldflags drop another 2.5MB from the binary size.
 # -w    Omit the DWARF symbol table.
 # -s    Omit the symbol table and debug information.
-#RUN go install github.com/m-lab/epoxy/cmd/epoxy_client@latest
-RUN CGO_ENABLED=0 GO111MODULE=auto go install -ldflags '-w -s' github.com/m-lab/epoxy/cmd/epoxy_client@latest
+RUN CGO_ENABLED=0 go install -ldflags '-w -s' github.com/m-lab/epoxy/cmd/epoxy_client@latest
 
