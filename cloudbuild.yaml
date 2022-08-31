@@ -30,7 +30,7 @@ steps:
 - name: gcr.io/cloud-builders/docker
   args: [
     'build',
-    '--tag=gcr.io/$PROJECT_ID/epoxy-images',
+    '--tag=gcr.io/$PROJECT_ID/epoxy-images:1.18',
     '--file=Dockerfile.epoxy-images', '.'
   ]
   waitFor: ['-']
@@ -39,7 +39,7 @@ steps:
 - name: gcr.io/cloud-builders/docker
   args: [
     'build',
-    '--tag=gcr.io/$PROJECT_ID/siteinfo-cbif',
+    '--tag=gcr.io/$PROJECT_ID/siteinfo-cbif:1.18',
     '--file=Dockerfile.siteinfo', '.'
   ]
   waitFor: ['-']
@@ -47,5 +47,5 @@ steps:
 images:
 - 'gcr.io/$PROJECT_ID/golang-cbif:1.18'
 - 'gcr.io/$PROJECT_ID/gcloud-jsonnet-cbif:1.18'
-- 'gcr.io/$PROJECT_ID/epoxy-images'
-- 'gcr.io/$PROJECT_ID/siteinfo-cbif'
+- 'gcr.io/$PROJECT_ID/epoxy-images:1.18'
+- 'gcr.io/$PROJECT_ID/siteinfo-cbif:1.18'
