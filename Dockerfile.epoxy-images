@@ -6,16 +6,28 @@ RUN apt-get install -y unzip python3-pip git vim-nox make autoconf gcc mkisofs \
     isolinux bc texinfo libncurses-dev linux-source debootstrap gcc \
     strace cpio squashfs-tools curl lsb-release gawk rsync \
     mtools dosfstools syslinux syslinux-utils parted kpartx grub-efi \
-    linux-source golang-1.16 xorriso jq
-# Adds go-1.16 binary to a known location in $PATH
-RUN update-alternatives --install /usr/local/bin/go go /usr/lib/go-1.16/bin/go 10
-ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/go/bin
-ENV GOROOT /usr/lib/go-1.16
-RUN mkdir /go
+    linux-source xorriso jq
+
+# Fetch recent go version.
+# NOTE: As of 2022-08-31, golang-1.18 was not an available package in ubuntu:20.04
+ENV GOLANG_VERSION 1.18.5
+ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
+ENV GOLANG_DOWNLOAD_SHA256 9e5de37f9c49942c601b191ac5fba404b868bfc21d446d6960acc12283d6e5f2
+
+RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz \
+    && echo "$GOLANG_DOWNLOAD_SHA256  golang.tar.gz" | sha256sum -c - \
+    && tar -C /usr/local/ -xzf golang.tar.gz \
+    && rm golang.tar.gz
+
 ENV GOPATH /go
+RUN mkdir /go
+ENV GOROOT /usr/local/go/
+ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
+RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 # CGO_ENABLED=0 creates a statically linked binary.
 # The -ldflags drop another 2.5MB from the binary size.
 # -w    Omit the DWARF symbol table.
 # -s    Omit the symbol table and debug information.
-RUN CGO_ENABLED=0 GO111MODULE=auto go get -u -ldflags '-w -s' github.com/m-lab/epoxy/cmd/epoxy_client
+#RUN go install github.com/m-lab/epoxy/cmd/epoxy_client@latest
+RUN CGO_ENABLED=0 GO111MODULE=auto go install -ldflags '-w -s' github.com/m-lab/epoxy/cmd/epoxy_client@latest
 
