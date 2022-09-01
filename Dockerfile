@@ -1,8 +1,8 @@
-FROM golang:1.13
+FROM golang:1.18
 
 ADD . /go/src/github.com/m-lab/gcp-config
 WORKDIR /go/src/github.com/m-lab/gcp-config/
-RUN go get -v github.com/m-lab/gcp-config/cmd/stctl
-RUN go get -v github.com/m-lab/gcp-config/cmd/cbif
+RUN go install -v github.com/m-lab/gcp-config/cmd/stctl@v1.3.12
+RUN go install -v github.com/m-lab/gcp-config/cmd/cbif@v1.3.12
 ENV SINGLE_COMMAND true
 ENTRYPOINT ["/go/bin/cbif"]
