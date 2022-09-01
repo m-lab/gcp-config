@@ -1,5 +1,5 @@
 FROM golang:1.18
-RUN go install github.com/m-lab/epoxy/cmd/epoxy_admin@latest
-RUN go install github.com/m-lab/gcp-config/cmd/cbctl@latest
-RUN go install github.com/m-lab/gcp-config/cmd/cbif@latest
+RUN go install github.com/m-lab/epoxy/cmd/epoxy_admin@v1.2.4
+RUN go install github.com/m-lab/gcp-config/cmd/cbctl@v1.3.12
+RUN go install -v github.com/m-lab/gcp-config/cmd/cbif@v1.3.12
 ENTRYPOINT ["/go/bin/cbif"]
