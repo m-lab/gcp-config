@@ -1,0 +1,10 @@
+[
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "A Cloud Build failed for repo *{{.Build.Substitutions.REPO_NAME}}*. View <{{.Build.LogUrl}}|the Build logs> to see why."
+    }
+  }
+]
+
