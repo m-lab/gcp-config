@@ -1,8 +1,10 @@
 ## Cloud Build notifiers
 
-The files in this directory are used to configure Cloud Build notifiers.
-Currently, the only notifier enabled is Slack. See these documents for more
-infomation on how the Slack notifier was enabled in each project.
+The files in this directory are used to configure Cloud Build notifiers. They
+are stored in each project in a GCS bucket named like
+`<project>-notifiers-config`.  Currently, the only notifier enabled is Slack.
+See these documents for more infomation on how the Slack notifier was enabled
+in each project.
 
 * https://cloud.google.com/build/docs/configuring-notifications/configure-slack
 * https://cloud.google.com/build/docs/configuring-notifications/automate
