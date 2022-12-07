@@ -30,3 +30,9 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 # -s    Omit the symbol table and debug information.
 RUN CGO_ENABLED=0 go install -ldflags '-w -s' github.com/m-lab/epoxy/cmd/epoxy_client@v1.2.4
 
+# Install Hashicorp Packer
+ENV PACKER_VERSION 1.8.4
+RUN curl --location --remote-name "https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip" \
+    && unzip "packer_${PACKER_VERSION}_linux_amd64.zip" -d /usr/local/bin \
+    && rm "packer_${PACKER_VERSION}_linux_amd64.zip"
+
