@@ -9,10 +9,10 @@ RUN apt-get install -y unzip python3-pip git vim-nox make autoconf gcc mkisofs \
     linux-source xorriso jq
 
 # Fetch recent go version.
-# NOTE: As of 2022-08-31, golang-1.18 was not an available package in ubuntu:20.04
-ENV GOLANG_VERSION 1.18.5
-ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
-ENV GOLANG_DOWNLOAD_SHA256 9e5de37f9c49942c601b191ac5fba404b868bfc21d446d6960acc12283d6e5f2
+# NOTE: As of 2023-03-20, golang-1.20 was not an available package in ubuntu:20.04
+ENV GOLANG_VERSION 1.20.2
+ENV GOLANG_DOWNLOAD_URL https://go.dev/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
+ENV GOLANG_DOWNLOAD_SHA256 4eaea32f59cde4dc635fbc42161031d13e1c780b87097f4b4234cfce671f1768
 
 RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz \
     && echo "$GOLANG_DOWNLOAD_SHA256  golang.tar.gz" | sha256sum -c - \

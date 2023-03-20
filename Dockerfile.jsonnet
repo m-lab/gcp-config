@@ -1,10 +1,10 @@
 # Build cbif for entrypoint.
-FROM golang:1.18 AS cbif-go-builder
+FROM golang:1.20 AS cbif-go-builder
 ADD . /go/src/github.com/m-lab/gcp-config
 RUN go install -v github.com/m-lab/gcp-config/cmd/cbif@v1.3.12
 
 # Build Go version of jsonnet.
-FROM golang:1.18 AS jsonnet-go-builder
+FROM golang:1.20 AS jsonnet-go-builder
 RUN apt-get install -y git
 RUN go install -v github.com/google/go-jsonnet/cmd/jsonnet@latest
 
