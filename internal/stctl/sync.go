@@ -30,7 +30,7 @@ func (c *Command) find(ctx context.Context) (*storagetransfer.TransferJob, error
 	logx.Debug.Println("Listing jobs")
 	findJob := func(resp *storagetransfer.ListTransferJobsResponse) error {
 		for _, job := range resp.TransferJobs {
-			if job.Schedule.ScheduleEndDate != nil {
+			if job.Schedule == nil || job.Schedule.ScheduleEndDate != nil {
 				// We only manage jobs without an end date.
 				continue
 			}
