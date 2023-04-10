@@ -34,6 +34,7 @@ steps:
              '-include=revtr',
              '-include=utilization',
              '-include=wehe',
+             '-include=autoload',
              '-deleteAfterTransfer=true',
              'sync'
   ]
@@ -91,6 +92,7 @@ steps:
              '-include=revtr',
              '-include=utilization',
              '-include=wehe',
+             '-include=autoload',
              '-deleteAfterTransfer=true',
              'sync'
   ]
