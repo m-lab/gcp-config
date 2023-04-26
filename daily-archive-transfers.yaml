@@ -34,6 +34,24 @@ steps:
              '-include=revtr',
              '-include=utilization',
              '-include=wehe',
+             '-deleteAfterTransfer=true',
+             'sync'
+  ]
+
+# Nodes upload to the pusher-* bucket every 2 hours.
+# Configure hourly pusher to local archive transfer.
+# NOTE: the hourly setting has been set by editing the job created
+# in the web UI (because it is not supported by stctl), so this
+# declaration is not identical to what is in the corresponding GCP
+# config.
+# TODO(cristinaleon): Add hourly schedule functionality to stctl.
+- name: gcp-config-cbif
+  env:
+  - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
+  args: [
+    'stctl', '-gcs.source=pusher-$PROJECT_ID',
+             '-gcs.target=archive-$PROJECT_ID',
+             '-time=00:00:00',
              '-include=autoload',
              '-deleteAfterTransfer=true',
              'sync'
@@ -92,7 +110,6 @@ steps:
              '-include=revtr',
              '-include=utilization',
              '-include=wehe',
-             '-include=autoload',
              '-deleteAfterTransfer=true',
              'sync'
   ]
