@@ -147,7 +147,6 @@ steps:
              'sync'
   ]
 
-
 # TODO(soltesz): once ST schedules above stabilize, bring backup transfer
 # schedule in sync. Until then, complete daily backups will be delayed by a day.
 
