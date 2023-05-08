@@ -129,6 +129,24 @@ steps:
              'sync'
   ]
 
+# Hourly local archive to public archive transfer for autoloaded data.
+# NOTE: the hourly setting has been set by editing the job created
+# in the web UI (because it is not supported by stctl), so this
+# declaration is not identical to what is in the corresponding GCP
+# config.
+# TODO(cristinaleon): Add hourly schedule functionality to stctl.
+- name: gcp-config-cbif
+  env:
+  - PROJECT_IN=measurement-lab
+  args: [
+    'stctl', '-gcs.source=archive-mlab-oti',
+             '-gcs.target=archive-measurement-lab',
+             '-time=00:00:00',
+             '-include=autoload',
+             '-deleteAfterTransfer=true',
+             'sync'
+  ]
+
 
 # TODO(soltesz): once ST schedules above stabilize, bring backup transfer
 # schedule in sync. Until then, complete daily backups will be delayed by a day.
