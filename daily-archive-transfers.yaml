@@ -34,6 +34,7 @@ steps:
              '-include=revtr',
              '-include=utilization',
              '-include=wehe',
+             '-include=msak',
              '-deleteAfterTransfer=true',
              'sync'
   ]
@@ -110,6 +111,7 @@ steps:
              '-include=revtr',
              '-include=utilization',
              '-include=wehe',
+             '-include=msak',
              '-deleteAfterTransfer=true',
              'sync'
   ]
