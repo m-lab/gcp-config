@@ -1,4 +1,4 @@
-FROM golang:1.20
+FROM golang:1.21
 RUN go install github.com/m-lab/epoxy/cmd/epoxy_admin@v1.2.5
 RUN go install github.com/m-lab/gcp-config/cmd/cbctl@v1.3.12
 RUN go install -v github.com/m-lab/gcp-config/cmd/cbif@v1.3.12

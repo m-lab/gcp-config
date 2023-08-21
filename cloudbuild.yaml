@@ -13,7 +13,7 @@ steps:
 # Build golang-cbif container. Useful golang builds and tests.
 - name: gcr.io/cloud-builders/docker
   args: [
-    'build', '--tag=gcr.io/$PROJECT_ID/golang-cbif:1.20',
+    'build', '--tag=gcr.io/$PROJECT_ID/golang-cbif:1.21',
     '--file=Dockerfile.golang', '.'
   ]
 
@@ -45,7 +45,7 @@ steps:
   waitFor: ['-']
 
 images:
-- 'gcr.io/$PROJECT_ID/golang-cbif:1.20'
+- 'gcr.io/$PROJECT_ID/golang-cbif:1.21'
 - 'gcr.io/$PROJECT_ID/gcloud-jsonnet-cbif:1.1'
 - 'gcr.io/$PROJECT_ID/epoxy-images:1.1'
 - 'gcr.io/$PROJECT_ID/siteinfo-cbif:1.1'
