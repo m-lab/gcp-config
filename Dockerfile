@@ -1,4 +1,4 @@
-FROM golang:1.20
+FROM golang:1.21
 
 ADD . /go/src/github.com/m-lab/gcp-config
 WORKDIR /go/src/github.com/m-lab/gcp-config/
