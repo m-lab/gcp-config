@@ -9,7 +9,7 @@ RUN apt-get install -y unzip python3-pip git vim-nox make autoconf gcc mkisofs \
     linux-source xorriso jq
 
 # Fetch recent go version.
-# NOTE: As of 2023-08-21, golang-1.21 was not an available package in ubuntu:20.04
+# NOTE: Starting with Go 1.21, the initial release for a release family is of the form 1.N.0.
 ENV GOLANG_VERSION 1.21.0
 ENV GOLANG_DOWNLOAD_URL https://go.dev/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
 ENV GOLANG_DOWNLOAD_SHA256 d0398903a16ba2232b389fb31032ddf57cac34efda306a0eebac34f0965a0742
