@@ -1,6 +1,6 @@
 module github.com/m-lab/gcp-config
 
-go 1.21
+go 1.20
 
 require (
 	github.com/go-test/deep v1.0.4
