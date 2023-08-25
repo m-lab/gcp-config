@@ -3,10 +3,10 @@ module github.com/m-lab/gcp-config
 go 1.20
 
 require (
-	github.com/go-test/deep v1.0.4
+	github.com/go-test/deep v1.0.6
 	github.com/google/go-github/v35 v35.2.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/m-lab/go v1.4.0
+	github.com/m-lab/go v0.1.66
 	github.com/stephen-soltesz/pretty v0.0.0-20181228034758-e18cda1ae6b8
 	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
 	google.golang.org/api v0.46.0
