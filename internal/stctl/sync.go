@@ -106,6 +106,12 @@ func (c *Command) specMatches(job *storagetransfer.TransferJob) bool {
 		logx.Debug.Println("spec: times not equal", job.Schedule, c.StartTime)
 		return false
 	}
+
+	if job.Schedule.RepeatInterval != c.Interval {
+		logx.Debug.Println("spec: interval not equal", job.Schedule.RepeatInterval, c.Interval)
+		return false
+	}
+
 	cond := job.TransferSpec.ObjectConditions
 	if cond == nil {
 		if len(c.Prefixes) > 0 || c.MaxFileAge > 0 || c.MinFileAge > 0 {
