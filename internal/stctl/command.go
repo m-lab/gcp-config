@@ -48,6 +48,7 @@ type Command struct {
 	TargetBucket        string
 	Prefixes            []string
 	StartTime           flagx.Time
+	Interval            string
 	AfterDate           time.Time
 	MinFileAge          time.Duration
 	MaxFileAge          time.Duration

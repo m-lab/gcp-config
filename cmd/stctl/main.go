@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,6 +36,7 @@ var (
 	destBucket          string
 	prefixes            flagx.StringArray
 	startTime           flagx.Time
+	interval            string
 	afterDate           flagx.DateTime
 	minAge              time.Duration
 	maxAge              time.Duration
@@ -48,6 +49,7 @@ func init() {
 	flag.StringVar(&destBucket, "gcs.target", "", "Destination bucket.")
 	flag.Var(&prefixes, "include", "Only transfer files with given prefix. Default all prefixes. Can be specified multiple times.")
 	flag.Var(&startTime, "time", "Start daily transfer at this time (HH:MM:SS)")
+	flag.StringVar(&interval, "interval", "", "Interval between the start of each scheduled transfer operation.")
 	flag.Var(&afterDate, "after", "Only list operations that ran after the given date. Default is all dates.")
 	flag.DurationVar(&minAge, "minFileAge", 0, "Minimum time since file modification")
 	flag.DurationVar(&maxAge, "maxFileAge", 0, "Maximum time since file modification")
@@ -107,6 +109,7 @@ func main() {
 		TargetBucket:        destBucket,
 		Prefixes:            prefixes,
 		StartTime:           startTime,
+		Interval:            interval,
 		AfterDate:           afterDate.Time,
 		MinFileAge:          minAge.Truncate(time.Second),
 		MaxFileAge:          maxAge.Truncate(time.Second),

@@ -35,6 +35,7 @@ func (c *Command) Create(ctx context.Context) (*storagetransfer.TransferJob, err
 				Minutes: int64(c.StartTime.Minute),
 				Seconds: int64(c.StartTime.Second),
 			},
+			RepeatInterval: c.Interval,
 		},
 		Status:       "ENABLED",
 		TransferSpec: &spec,
