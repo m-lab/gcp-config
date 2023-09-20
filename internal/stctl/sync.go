@@ -107,10 +107,7 @@ func (c *Command) specMatches(job *storagetransfer.TransferJob) bool {
 		return false
 	}
 
-	pretty.Print(job.Schedule.RepeatInterval)
-	pretty.Print(c.Interval)
-
-	if job.Schedule.RepeatInterval != c.Interval {
+	if c.Interval != "" && job.Schedule.RepeatInterval != c.Interval {
 		logx.Debug.Println("spec: interval not equal", job.Schedule.RepeatInterval, c.Interval)
 		return false
 	}
