@@ -246,6 +246,54 @@ func TestCommand_Sync(t *testing.T) {
 			},
 		},
 		{
+			name: "success-update-interval",
+			c: &Command{
+				SourceBucket: "fake-source",
+				TargetBucket: "fake-target",
+				StartTime:    flagx.Time{Hour: 1, Minute: 2, Second: 3},
+				Interval:     "3600s",
+				Client: &fakeTJ{
+					// fake job listed to search for one that matches the current Command spec.
+					listJobResp: &storagetransfer.ListTransferJobsResponse{
+						TransferJobs: []*storagetransfer.TransferJob{
+							{
+								Name:        "transferOperations/update-interval",
+								Description: getDesc("fake-source", "fake-target", flagx.Time{Hour: 1, Minute: 2, Second: 3}),
+								Schedule: &storagetransfer.Schedule{
+									StartTimeOfDay: &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
+								},
+								TransferSpec: &storagetransfer.TransferSpec{
+									GcsDataSource: &storagetransfer.GcsData{BucketName: "fake-source"},
+									GcsDataSink:   &storagetransfer.GcsData{BucketName: "fake-target"},
+								},
+							},
+						},
+					},
+					// a fake job that is disabled.
+					job: &storagetransfer.TransferJob{},
+				},
+			},
+			shouldFind: true,
+			expected: &storagetransfer.TransferJob{
+				Description: "STCTL: transfer fake-source -> fake-target at 01:02:03",
+				Name:        "THIS-IS-A-FAKE-ASSIGNED-JOB-NAME",
+				Schedule: &storagetransfer.Schedule{
+					StartTimeOfDay: &storagetransfer.TimeOfDay{Hours: 1, Minutes: 2, Seconds: 3},
+					ScheduleStartDate: &storagetransfer.Date{
+						Day:   int64(ts.Day()),
+						Month: int64(ts.Month()),
+						Year:  int64(ts.Year()),
+					},
+					RepeatInterval: "3600s",
+				},
+				TransferSpec: &storagetransfer.TransferSpec{
+					GcsDataSource: &storagetransfer.GcsData{BucketName: "fake-source"},
+					GcsDataSink:   &storagetransfer.GcsData{BucketName: "fake-target"},
+				},
+				Status: "ENABLED",
+			},
+		},
+		{
 			name: "success-job-not-found-then-created",
 			c: &Command{
 				SourceBucket: "source",

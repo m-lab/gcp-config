@@ -41,11 +41,6 @@ steps:
 
 # Nodes upload to the pusher-* bucket every 2 hours.
 # Configure hourly pusher to local archive transfer.
-# NOTE: the hourly setting has been set by editing the job created
-# in the web UI (because it is not supported by stctl), so this
-# declaration is not identical to what is in the corresponding GCP
-# config.
-# TODO(cristinaleon): Add hourly schedule functionality to stctl.
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=mlab-sandbox,mlab-staging,mlab-oti
@@ -53,6 +48,7 @@ steps:
     'stctl', '-gcs.source=pusher-$PROJECT_ID',
              '-gcs.target=archive-$PROJECT_ID',
              '-time=00:00:00',
+             '-interval=3600s',
              '-include=autoload',
              '-deleteAfterTransfer=true',
              'sync'
@@ -70,6 +66,7 @@ steps:
              '-gcs.target=archive-measurement-lab',
              '-include=revtr',
              '-time=02:30:00',
+             '-interval=3600s',
              '-maxFileAge=27h',
              'sync'
   ]
@@ -132,11 +129,6 @@ steps:
   ]
 
 # Hourly local archive to public archive transfer for autoloaded data.
-# NOTE: the hourly setting has been set by editing the job created
-# in the web UI (because it is not supported by stctl), so this
-# declaration is not identical to what is in the corresponding GCP
-# config.
-# TODO(cristinaleon): Add hourly schedule functionality to stctl.
 - name: gcp-config-cbif
   env:
   - PROJECT_IN=measurement-lab
@@ -144,6 +136,7 @@ steps:
     'stctl', '-gcs.source=archive-mlab-oti',
              '-gcs.target=archive-measurement-lab',
              '-time=00:00:00',
+             '-interval=3600s',
              '-include=autoload',
              '-deleteAfterTransfer=true',
              'sync'
