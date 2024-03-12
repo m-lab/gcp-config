@@ -13,7 +13,9 @@ steps:
 # Build golang-cbif container. Useful golang builds and tests.
 - name: gcr.io/cloud-builders/docker
   args: [
-    'build', '--tag=gcr.io/$PROJECT_ID/golang-cbif:1.20',
+    'build',
+    '--tag=gcr.io/$PROJECT_ID/golang-cbif:1.20',
+    '--tag=us-central1-docker.pkg.dev/$PROJECT_ID/build-images/golang-cbif:1.20',
     '--file=Dockerfile.golang', '.'
   ]
 
@@ -22,6 +24,7 @@ steps:
   args: [
     'build',
     '--tag=gcr.io/$PROJECT_ID/gcloud-jsonnet-cbif:1.1',
+    '--tag=us-central1-docker.pkg.dev/$PROJECT_ID/build-images/gcloud-jsonnet-cbif:1.1',
     '--file=Dockerfile.jsonnet', '.'
   ]
   waitFor: ['-']
@@ -31,6 +34,7 @@ steps:
   args: [
     'build',
     '--tag=gcr.io/$PROJECT_ID/epoxy-images:1.1',
+    '--tag=us-central1-docker.pkg.dev/$PROJECT_ID/build-images/epoxy-images:1.1',
     '--file=Dockerfile.epoxy-images', '.'
   ]
   waitFor: ['-']
@@ -40,6 +44,7 @@ steps:
   args: [
     'build',
     '--tag=gcr.io/$PROJECT_ID/siteinfo-cbif:1.1',
+    '--tag=us-central1-docker.pkg.dev/$PROJECT_ID/build-images/siteinfo-cbif:1.1',
     '--file=Dockerfile.siteinfo', '.'
   ]
   waitFor: ['-']
@@ -49,3 +54,8 @@ images:
 - 'gcr.io/$PROJECT_ID/gcloud-jsonnet-cbif:1.1'
 - 'gcr.io/$PROJECT_ID/epoxy-images:1.1'
 - 'gcr.io/$PROJECT_ID/siteinfo-cbif:1.1'
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/build-images/golang-cbif:1.20'
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/build-images/gcloud-jsonnet-cbif:1.1'
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/build-images/epoxy-images:1.1'
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/build-images/siteinfo-cbif:1.1'
+
